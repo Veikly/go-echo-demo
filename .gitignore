@@ -1,0 +1,6 @@
+go-echo-demo-firestore-private-key.json
+go-echo-demo-firestore-private-key.json
+*.private-key.json
+go-echo-demo-firestore-private-key.json
+*.private-key.json
+secrets/
