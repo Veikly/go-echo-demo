@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
@@ -21,7 +22,7 @@ func NewTask(s repository.TaskRepository) *Task {
 
 func (u *Task) CreateTask(ctx context.Context, input usecaseio.CreateTaskInput) (usecaseio.CreateTaskOutput, error) {
 	if input.Title == "" {
-		return usecaseio.CreateTaskOutput{}, fmt.Errorf("task title can not be null")
+		return usecaseio.CreateTaskOutput{}, domain.ErrInvalidInput
 	}
 	task := model.Task{
 		Title:       input.Title,
@@ -31,7 +32,7 @@ func (u *Task) CreateTask(ctx context.Context, input usecaseio.CreateTaskInput) 
 	}
 	err := u.taskSvc.CreateTask(ctx, &task)
 	if err != nil {
-		return usecaseio.CreateTaskOutput{}, fmt.Errorf("create task error %w", err)
+		return usecaseio.CreateTaskOutput{}, fmt.Errorf("create task failed %w", err)
 	}
 	output := usecaseio.CreateTaskOutput{
 		ID:          task.ID,
@@ -63,7 +64,7 @@ func (u *Task) GetTaskDetail(ctx context.Context, taskId string) (usecaseio.Task
 
 func (u *Task) ModifyTask(ctx context.Context, input usecaseio.ModifyTaskInput) (usecaseio.TaskDetailOutput, error) {
 	if input.ID == "" {
-		return usecaseio.TaskDetailOutput{}, fmt.Errorf("task id can not be null")
+		return usecaseio.TaskDetailOutput{}, domain.ErrInvalidInput
 	}
 	task := model.Task{
 		ID:          input.ID,
@@ -89,7 +90,7 @@ func (u *Task) ModifyTask(ctx context.Context, input usecaseio.ModifyTaskInput) 
 
 func (u *Task) DeleteTask(ctx context.Context, taskId string) error {
 	if taskId == "" {
-		return fmt.Errorf("task id can not be null")
+		return domain.ErrInvalidInput
 	}
 	err := u.taskSvc.DeleteTask(ctx, taskId)
 	if err != nil {

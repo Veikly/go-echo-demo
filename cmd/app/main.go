@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go-echo-demo/delivery/http/appmiddleware"
 	"go-echo-demo/internal/bootstrap"
 	"go-echo-demo/internal/handler"
 	"go-echo-demo/internal/infra/firestore/service"
@@ -32,6 +33,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
+	e.HTTPErrorHandler = appmiddleware.CustomHTTPErrorHandler
 
 	server := bootstrap.Server{Echo: e, TaskHandler: taskHandler}
 	// 为所有Handler绑定路由

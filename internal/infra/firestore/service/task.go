@@ -3,11 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/infra/firestore/dto"
 	"go-echo-demo/internal/model"
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Task TaskService 要求实现TaskRepository接口
@@ -25,10 +28,9 @@ func (s *Task) CreateTask(ctx context.Context, data *model.Task) error {
 	td := dto.NewTask(data)
 	docRef, _, err := s.client.Collection("tasks").Add(ctx, td)
 	if err != nil {
-		return fmt.Errorf("create task error %v", err)
+		return err
 	}
 	data.ID = docRef.ID
-	fmt.Printf("create task succeed!%v", docRef)
 	return nil
 }
 
@@ -37,9 +39,11 @@ func (s *Task) GetTaskDetail(ctx context.Context, taskId string) (*model.Task, e
 	docRef := s.client.Collection("tasks").Doc(taskId)
 	docSnap, err := docRef.Get(ctx)
 	if err != nil {
-		return nil, nil
+		if status.Code(err) == codes.NotFound {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
 	}
-	fmt.Println("任务详情", *docSnap)
 	var rs dto.Task
 	if err := docSnap.DataTo(&rs); err != nil {
 		return nil, err
