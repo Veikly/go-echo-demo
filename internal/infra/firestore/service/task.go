@@ -53,9 +53,16 @@ func (s *Task) GetTaskDetail(ctx context.Context, taskId string) (*model.Task, e
 }
 
 func (s *Task) ModifyTask(ctx context.Context, data *model.Task) (*model.Task, error) {
-	data.UpdatedAt = time.Now()
-	td := dto.NewTask(data)
-	_, err := s.client.Collection("tasks").Doc(data.ID).Set(ctx, td.ToMap(), firestore.MergeAll)
+	updates := map[string]interface{}{
+		"title":       data.Title,
+		"description": data.Description,
+		"status":      data.Status,
+		"updated_at":  time.Now(),
+	}
+	if !data.CompletedAt.IsZero() {
+		updates["completed_at"] = data.CompletedAt
+	}
+	_, err := s.client.Collection("tasks").Doc(data.ID).Set(ctx, updates, firestore.MergeAll)
 	if err != nil {
 		return nil, fmt.Errorf("modify task error %v", err)
 	}
@@ -63,11 +70,11 @@ func (s *Task) ModifyTask(ctx context.Context, data *model.Task) (*model.Task, e
 	if err != nil {
 		return nil, err
 	}
-	var result model.Task
+	var result dto.Task
 	if err := docRef.DataTo(&result); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.ToEntity(), nil
 }
 
 func (s *Task) DeleteTask(ctx context.Context, taskId string) error {
