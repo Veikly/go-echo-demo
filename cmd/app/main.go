@@ -25,6 +25,7 @@ func main() {
 
 	// init firestore
 	fireStoreClient := bootstrap.InitFireStore(ctx, config.ProjectName)
+	bootstrap.InitFirebase()
 
 	taskSvc := service.NewTask(fireStoreClient)
 	taskUseCase := usecase.NewTask(taskSvc)
@@ -33,6 +34,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
+	e.Use(appmiddleware.FirebaseAuthMiddleware)
 	e.HTTPErrorHandler = appmiddleware.CustomHTTPErrorHandler
 
 	server := bootstrap.Server{Echo: e, TaskHandler: taskHandler}

@@ -1,0 +1,17 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "adapter": "Delve",
+    "label": "go test ./...",
+    "request": "launch",
+    "mode": "test",
+    "program": "./...",
+    "cwd": "$ZED_CUSTOM_GO_MODULE_ROOT",
+    "args": ["-test.v"],
+    "buildFlags": [],
+    "env": {},
+  },
+]
