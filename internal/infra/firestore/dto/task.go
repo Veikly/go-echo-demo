@@ -2,18 +2,19 @@ package dto
 
 import (
 	"fmt"
+	"go-echo-demo/internal/constants/enums"
 	"go-echo-demo/internal/model"
 	"time"
 )
 
 type Task struct {
-	ID          string    `firestore:"-"`
-	Title       string    `firestore:"title"`
-	Description string    `firestore:"description"`
-	Status      int       `firestore:"status"` //0待办 1进行中 2已完成 3已放弃 4已归档
-	CompletedAt time.Time `firestore:"completed_at"`
-	CreatedAt   time.Time `firestore:"created_at"`
-	UpdatedAt   time.Time `firestore:"updated_at"`
+	ID          string           `firestore:"-"`
+	Title       string           `firestore:"title"`
+	Description string           `firestore:"description"`
+	Status      enums.TaskStatus `firestore:"status"` //0待办 1进行中 2已完成 3已放弃 4已归档
+	CompletedAt time.Time        `firestore:"completed_at"`
+	CreatedAt   time.Time        `firestore:"created_at"`
+	UpdatedAt   time.Time        `firestore:"updated_at"`
 }
 
 func (t *Task) ToEntity() *model.Task {
