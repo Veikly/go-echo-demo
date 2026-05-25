@@ -6,3 +6,5 @@ go-echo-demo-firestore-private-key.json
 *.private-key.json
 secrets/
 .idea
+.env
+__debug_bin*
