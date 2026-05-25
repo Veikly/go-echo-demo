@@ -10,16 +10,20 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/gommon/log"
+	"go.uber.org/zap"
 )
 
 // 项目启动入口 负责初始化组件 然后汇总 装配
 func main() {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	zap.ReplaceGlobals(logger)
+
 	ctx := context.Background()
 
 	config, err := bootstrap.LoadConfig()
 	if err != nil {
-		log.Errorf("loading the bootstrap config error %v", err)
+		zap.L().Error("loading the bootstrap config error", zap.Error(err))
 		return
 	}
 
@@ -32,14 +36,14 @@ func main() {
 	taskHandler := handler.NewTask(taskUseCase)
 
 	e := echo.New()
-	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(appmiddleware.FirebaseAuthMiddleware)
+	e.Use(appmiddleware.ZapLogger)
 	e.HTTPErrorHandler = appmiddleware.CustomHTTPErrorHandler
 
 	server := bootstrap.Server{Echo: e, TaskHandler: taskHandler}
 	// 为所有Handler绑定路由
 	bootstrap.BindRoutes(&server)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	zap.L().Fatal("server start error", zap.Error(e.Start(":8080")))
 }

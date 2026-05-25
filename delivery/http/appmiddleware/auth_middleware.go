@@ -1,19 +1,18 @@
 package appmiddleware
 
 import (
-	"fmt"
 	"go-echo-demo/internal/bootstrap"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 )
 
 func FirebaseAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		fmt.Println("请求认证中间件...")
+		zap.L().Debug("请求认证中间件", zap.String("url", c.Request().URL.String()))
 		authHeader := c.Request().Header.Get(echo.HeaderAuthorization)
-		fmt.Println("当前请求URL", c.Request().URL)
 		// 后续如果有需要对外开放的白名单接口 这里还需要进行判断
 		if authHeader == "" {
 			return echo.NewHTTPError(http.StatusUnauthorized, "缺少鉴权凭证")

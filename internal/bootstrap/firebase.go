@@ -2,10 +2,10 @@ package bootstrap
 
 import (
 	"context"
-	"log"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
+	"go.uber.org/zap"
 	"google.golang.org/api/option"
 )
 
@@ -15,10 +15,10 @@ func InitFirebase() {
 	opt := option.WithAuthCredentialsFile(option.ServiceAccount, "/Users/lin/go-study/go-echo-demo/go-echo-demo-firebase-adminsdk-fbsvc-98c4d740c5.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
-		log.Fatalf("Firebase 初始化失败: %v", err)
+		zap.L().Fatal("Firebase 初始化失败", zap.Error(err))
 	}
 	AuthClient, err = app.Auth(context.Background())
 	if err != nil {
-		log.Fatalf("获取AuthClient失败: %v", err)
+		zap.L().Fatal("获取AuthClient失败", zap.Error(err))
 	}
 }

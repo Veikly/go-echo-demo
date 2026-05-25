@@ -2,16 +2,16 @@ package bootstrap
 
 import (
 	"context"
-	"fmt"
 
 	"cloud.google.com/go/firestore"
+	"go.uber.org/zap"
 )
 
 // init firestore
 func InitFireStore(ctx context.Context, projectName string) *firestore.Client {
 	client, err := firestore.NewClient(ctx, projectName)
 	if err != nil {
-		fmt.Printf("Exception occurred while initializing the database connection %v\n", err)
+		zap.L().Error("Exception occurred while initializing the database connection", zap.Error(err))
 		panic(err)
 	}
 	return client

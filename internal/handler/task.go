@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"go.uber.org/zap"
 )
 
 type TaskHandler struct {
@@ -73,7 +73,7 @@ func (h *TaskHandler) ModifyTask(c echo.Context) error {
 	}
 	output, err := h.TaskUseCase.ModifyTask(c.Request().Context(), input)
 	if err != nil {
-		log.Errorf("modify task failed %v", err)
+		zap.L().Error("modify task failed", zap.Error(err))
 		return err
 	}
 	return c.JSON(http.StatusOK, output)

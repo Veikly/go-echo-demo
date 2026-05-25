@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 )
 
 type ErrorResponse struct {
@@ -31,7 +32,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 	}
 
 	if appError.Status >= http.StatusInternalServerError {
-		c.Logger().Errorf("request failed: %v", err)
+		zap.L().Error("request failed", zap.Error(err))
 	}
 
 	_ = c.JSON(appError.Status, ErrorResponse{
