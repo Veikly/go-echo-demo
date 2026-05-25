@@ -48,13 +48,19 @@ func main() {
 	taskUseCase := usecase.NewTask(taskSvc)
 	taskHandler := handler.NewTask(taskUseCase)
 
+	userSvc := service.NewUser(fireStoreClient)
+	userUseCase := usecase.NewUser(userSvc)
+	userHandler := handler.NewUser(userUseCase)
+
 	e := echo.New()
 	e.Use(middleware.Recover())
 	e.Use(appmiddleware.FirebaseAuthMiddleware)
 	e.Use(appmiddleware.ZapLogger)
 	e.HTTPErrorHandler = appmiddleware.CustomHTTPErrorHandler
 
-	server := bootstrap.Server{Echo: e, TaskHandler: taskHandler}
+	server := bootstrap.Server{Echo: e,
+		TaskHandler: taskHandler,
+		UserHandler: userHandler}
 	// 为所有Handler绑定路由
 	bootstrap.BindRoutes(&server)
 

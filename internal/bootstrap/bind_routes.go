@@ -11,4 +11,8 @@ func BindRoutes(server *Server) {
 	taskGroup.PUT("/:id", server.TaskHandler.ModifyTask)
 	taskGroup.DELETE("/:id", server.TaskHandler.DeleteTask)
 
+	userGroup := apiGroup.Group("/users")
+	userGroup.GET("/:id", server.UserHandler.GetMyDetail)
+	userGroup.POST("", server.UserHandler.CompleteUserInfo)
+
 }

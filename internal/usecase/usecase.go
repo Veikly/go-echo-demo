@@ -13,3 +13,8 @@ type TaskUseCase interface {
 	ModifyTask(ctx context.Context, input usecaseio.ModifyTaskInput) (usecaseio.TaskDetailOutput, error)
 	DeleteTask(ctx context.Context, taskId string) error
 }
+
+type UserUseCase interface {
+	GetMyDetail(ctx context.Context, userId string) (usecaseio.UserDetailOutput, error)
+	CompleteUserInfo(ctx context.Context, input usecaseio.CompleteUserInfoDetail) (usecaseio.CompleteUserInfoDetail, error)
+}

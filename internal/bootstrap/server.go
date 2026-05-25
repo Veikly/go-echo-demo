@@ -10,4 +10,5 @@ import (
 type Server struct {
 	Echo        *echo.Echo
 	TaskHandler *handler.TaskHandler
+	UserHandler *handler.UserHandler
 }
