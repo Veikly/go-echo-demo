@@ -11,9 +11,9 @@ import (
 
 // 定义全局响应格式
 type ApiResponse struct {
-	Code    constants.BizCode
-	Message string
-	Data    any
+	Code    constants.BizCode `json:"code"`
+	Message string            `json:"message"`
+	Data    any               `json:"data"`
 }
 
 func Success(c echo.Context, data any) error {
