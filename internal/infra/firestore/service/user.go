@@ -40,10 +40,10 @@ func (s *User) CompleteUserInfo(ctx context.Context, userInfo *model.User) (*mod
 	if err != nil {
 		return nil, err
 	}
-	var u model.User
+	var u dto.User
 	if err := data.DataTo(&u); err != nil {
 		return nil, err
 	}
 	u.ID = docRef.ID
-	return &u, nil
+	return u.ToEntity(), nil
 }

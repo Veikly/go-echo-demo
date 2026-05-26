@@ -2,6 +2,7 @@ package handler
 
 import (
 	"go-echo-demo/internal/request"
+	"go-echo-demo/internal/response"
 	"go-echo-demo/internal/usecase"
 	"net/http"
 
@@ -24,17 +25,32 @@ func (h *UserHandler) GetMyDetail(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, output)
+	rsp := response.UserDetail{
+		Username: output.Username,
+		Email:    output.Email,
+		Age:      output.Age,
+		Address:  response.Address(output.Address),
+		Profile:  response.Profile(output.Profile),
+	}
+	return c.JSON(http.StatusOK, rsp)
 }
 
 func (h *UserHandler) CompleteUserInfo(c echo.Context) error {
 	var req request.CompleteUserInfoInput
 	if err := c.Bind(&req); err != nil {
-		return nil
+		return err
 	}
 	output, err := h.UserUseCase.CompleteUserInfo(c.Request().Context(), req.ToCompleteUserInfoInput())
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusCreated, output)
+	rsp := response.CompleteUserInfo{
+		ID:       output.ID,
+		Username: output.Username,
+		Email:    output.Email,
+		Age:      output.Age,
+		Address:  response.Address(output.Address),
+		Profile:  response.Profile(output.Profile),
+	}
+	return c.JSON(http.StatusCreated, rsp)
 }

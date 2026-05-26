@@ -55,7 +55,16 @@ func (h *TaskHandler) GetTaskDetail(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, detail)
+	rsp := response.TaskDetail{
+		ID:          detail.ID,
+		Title:       detail.Title,
+		Description: detail.Description,
+		Status:      detail.Status,
+		CompletedAt: detail.CompletedAt,
+		CreatedAt:   detail.CreatedAt,
+		UpdatedAt:   detail.UpdatedAt,
+	}
+	return c.JSON(http.StatusOK, rsp)
 }
 
 func (h *TaskHandler) ModifyTask(c echo.Context) error {
@@ -76,7 +85,16 @@ func (h *TaskHandler) ModifyTask(c echo.Context) error {
 		zap.L().Error("modify task failed", zap.Error(err))
 		return err
 	}
-	return c.JSON(http.StatusOK, output)
+	rsp := response.TaskDetail{
+		ID:          output.ID,
+		Title:       output.Title,
+		Description: output.Description,
+		Status:      output.Status,
+		CompletedAt: output.CompletedAt,
+		CreatedAt:   output.CreatedAt,
+		UpdatedAt:   output.UpdatedAt,
+	}
+	return c.JSON(http.StatusOK, rsp)
 }
 
 func (h *TaskHandler) DeleteTask(c echo.Context) error {

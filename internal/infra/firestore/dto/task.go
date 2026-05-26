@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"fmt"
 	"go-echo-demo/internal/constants/enums"
 	"go-echo-demo/internal/model"
 	"time"
@@ -41,11 +40,6 @@ func (t *Task) ToMap() map[string]interface{} {
 }
 
 func NewTask(t *model.Task) *Task {
-	if t == nil {
-		fmt.Println("input can not be nil!")
-		return nil
-	}
-
 	return &Task{
 		Title:       t.Title,
 		Description: t.Description,

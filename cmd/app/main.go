@@ -45,7 +45,7 @@ func main() {
 	}
 	bootstrap.InitFirebase()
 
-	firebaseAuthenticator := authenticator.NewFirebaseAuthenticator()
+	firebaseAuthenticator := authenticator.NewFirebaseAuthenticator(bootstrap.AuthClient)
 	authMiddleware := appmiddleware.NewAuthMiddleware(firebaseAuthenticator)
 
 	taskSvc := service.NewTask(fireStoreClient)
