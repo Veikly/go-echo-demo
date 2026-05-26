@@ -6,6 +6,7 @@ import (
 	"go-echo-demo/delivery/http/appmiddleware"
 	"go-echo-demo/internal/bootstrap"
 	"go-echo-demo/internal/handler"
+	"go-echo-demo/internal/infra/authenticator"
 	"go-echo-demo/internal/infra/firestore/service"
 	"go-echo-demo/internal/usecase"
 	"net/http"
@@ -44,6 +45,9 @@ func main() {
 	}
 	bootstrap.InitFirebase()
 
+	firebaseAuthenticator := authenticator.NewFirebaseAuthenticator()
+	authMiddleware := appmiddleware.NewAuthMiddleware(firebaseAuthenticator)
+
 	taskSvc := service.NewTask(fireStoreClient)
 	taskUseCase := usecase.NewTask(taskSvc)
 	taskHandler := handler.NewTask(taskUseCase)
@@ -54,7 +58,7 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.Recover())
-	e.Use(appmiddleware.FirebaseAuthMiddleware)
+	e.Use(authMiddleware)
 	e.Use(appmiddleware.ZapLogger)
 	e.HTTPErrorHandler = appmiddleware.CustomHTTPErrorHandler
 
