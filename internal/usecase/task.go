@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"go-echo-demo/internal/domain"
+	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
@@ -22,7 +22,7 @@ func NewTask(s repository.TaskRepository) *Task {
 
 func (u *Task) CreateTask(ctx context.Context, input usecaseio.CreateTaskInput) (usecaseio.CreateTaskOutput, error) {
 	if input.Title == "" {
-		return usecaseio.CreateTaskOutput{}, domain.ErrInvalidInput
+		return usecaseio.CreateTaskOutput{}, constants.RequireAbsence
 	}
 	task := model.Task{
 		Title:       input.Title,
@@ -64,7 +64,7 @@ func (u *Task) GetTaskDetail(ctx context.Context, taskId string) (usecaseio.Task
 
 func (u *Task) ModifyTask(ctx context.Context, input usecaseio.ModifyTaskInput) (usecaseio.TaskDetailOutput, error) {
 	if input.ID == "" {
-		return usecaseio.TaskDetailOutput{}, domain.ErrInvalidInput
+		return usecaseio.TaskDetailOutput{}, constants.RequireAbsence
 	}
 	task := model.Task{
 		ID:          input.ID,
@@ -90,7 +90,7 @@ func (u *Task) ModifyTask(ctx context.Context, input usecaseio.ModifyTaskInput) 
 
 func (u *Task) DeleteTask(ctx context.Context, taskId string) error {
 	if taskId == "" {
-		return domain.ErrInvalidInput
+		return constants.RequireAbsence
 	}
 	err := u.taskSvc.DeleteTask(ctx, taskId)
 	if err != nil {

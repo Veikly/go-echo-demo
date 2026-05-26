@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"go-echo-demo/internal/domain"
+	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/infra/firestore/dto"
 	"go-echo-demo/internal/model"
 	"time"
@@ -40,7 +40,7 @@ func (s *Task) GetTaskDetail(ctx context.Context, taskId string) (*model.Task, e
 	docSnap, err := docRef.Get(ctx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			return nil, domain.ErrNotFound
+			return nil, constants.TaskNotFound
 		}
 		return nil, err
 	}

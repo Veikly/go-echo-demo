@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"go-echo-demo/delivery/http/reponse"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
 	"go-echo-demo/internal/usecase"
-	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
@@ -23,7 +23,7 @@ func (h *UserHandler) GetMyDetail(c echo.Context) error {
 	userId := c.Param("id")
 	output, err := h.UserUseCase.GetMyDetail(c.Request().Context(), userId)
 	if err != nil {
-		return err
+		return reponse.Fail(c, err)
 	}
 	rsp := response.UserDetail{
 		Username: output.Username,
@@ -32,7 +32,7 @@ func (h *UserHandler) GetMyDetail(c echo.Context) error {
 		Address:  response.Address(output.Address),
 		Profile:  response.Profile(output.Profile),
 	}
-	return c.JSON(http.StatusOK, rsp)
+	return reponse.Success(c, rsp)
 }
 
 func (h *UserHandler) CompleteUserInfo(c echo.Context) error {
@@ -42,7 +42,7 @@ func (h *UserHandler) CompleteUserInfo(c echo.Context) error {
 	}
 	output, err := h.UserUseCase.CompleteUserInfo(c.Request().Context(), req.ToCompleteUserInfoInput())
 	if err != nil {
-		return err
+		return reponse.Fail(c, err)
 	}
 	rsp := response.CompleteUserInfo{
 		ID:       output.ID,
@@ -52,5 +52,5 @@ func (h *UserHandler) CompleteUserInfo(c echo.Context) error {
 		Address:  response.Address(output.Address),
 		Profile:  response.Profile(output.Profile),
 	}
-	return c.JSON(http.StatusCreated, rsp)
+	return reponse.Success(c, rsp)
 }

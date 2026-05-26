@@ -1,8 +1,7 @@
-package appmiddleware
+package reponse
 
 import (
 	"errors"
-	"go-echo-demo/delivery/http/reponse"
 	"go-echo-demo/internal/constants"
 	"net/http"
 
@@ -10,11 +9,22 @@ import (
 	"go.uber.org/zap"
 )
 
-func CustomHTTPErrorHandler(err error, c echo.Context) {
-	if c.Response().Committed {
-		return
-	}
+// 定义全局响应格式
+type ApiResponse struct {
+	Code    constants.BizCode
+	Message string
+	Data    any
+}
 
+func Success(c echo.Context, data any) error {
+	return c.JSON(http.StatusOK, ApiResponse{
+		Code:    constants.Success,
+		Message: "",
+		Data:    data,
+	})
+}
+
+func Fail(c echo.Context, err error) error {
 	// 默认的系统级兜底参数
 	httpStatus := http.StatusInternalServerError
 	bizCode := constants.InternalError
@@ -32,7 +42,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 		zap.L().Error("Uncaught system error", zap.Any("error", err))
 	}
 
-	c.JSON(httpStatus, reponse.ApiResponse{
+	return c.JSON(httpStatus, ApiResponse{
 		Code:    bizCode,
 		Message: msg,
 		Data:    nil,

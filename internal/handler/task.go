@@ -1,14 +1,13 @@
 package handler
 
 import (
+	"go-echo-demo/delivery/http/reponse"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
 	"go-echo-demo/internal/usecase"
 	"go-echo-demo/internal/usecase/usecaseio"
-	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
 )
 
 type TaskHandler struct {
@@ -23,8 +22,7 @@ func NewTask(taskUseCase usecase.TaskUseCase) *TaskHandler {
 
 func (h *TaskHandler) CreateTask(c echo.Context) error {
 	var req request.CreateTask
-	err := c.Bind(&req)
-	if err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 	input := usecaseio.CreateTaskInput{
@@ -35,7 +33,7 @@ func (h *TaskHandler) CreateTask(c echo.Context) error {
 	}
 	output, err := h.TaskUseCase.CreateTask(c.Request().Context(), input)
 	if err != nil {
-		return err
+		return reponse.Fail(c, err)
 	}
 	rsp := response.SaveTask{
 		ID:          output.ID,
@@ -46,14 +44,14 @@ func (h *TaskHandler) CreateTask(c echo.Context) error {
 		CreatedAt:   output.CreatedAt,
 		UpdatedAt:   output.UpdatedAt,
 	}
-	return c.JSON(http.StatusCreated, rsp)
+	return reponse.Success(c, rsp)
 }
 
 func (h *TaskHandler) GetTaskDetail(c echo.Context) error {
 	taskId := c.Param("id")
 	detail, err := h.TaskUseCase.GetTaskDetail(c.Request().Context(), taskId)
 	if err != nil {
-		return err
+		return reponse.Fail(c, err)
 	}
 	rsp := response.TaskDetail{
 		ID:          detail.ID,
@@ -64,7 +62,7 @@ func (h *TaskHandler) GetTaskDetail(c echo.Context) error {
 		CreatedAt:   detail.CreatedAt,
 		UpdatedAt:   detail.UpdatedAt,
 	}
-	return c.JSON(http.StatusOK, rsp)
+	return reponse.Success(c, rsp)
 }
 
 func (h *TaskHandler) ModifyTask(c echo.Context) error {
@@ -82,8 +80,7 @@ func (h *TaskHandler) ModifyTask(c echo.Context) error {
 	}
 	output, err := h.TaskUseCase.ModifyTask(c.Request().Context(), input)
 	if err != nil {
-		zap.L().Error("modify task failed", zap.Error(err))
-		return err
+		return reponse.Fail(c, err)
 	}
 	rsp := response.TaskDetail{
 		ID:          output.ID,
@@ -94,14 +91,13 @@ func (h *TaskHandler) ModifyTask(c echo.Context) error {
 		CreatedAt:   output.CreatedAt,
 		UpdatedAt:   output.UpdatedAt,
 	}
-	return c.JSON(http.StatusOK, rsp)
+	return reponse.Success(c, rsp)
 }
 
 func (h *TaskHandler) DeleteTask(c echo.Context) error {
 	taskId := c.Param("id")
-	err := h.TaskUseCase.DeleteTask(c.Request().Context(), taskId)
-	if err != nil {
-		return err
+	if err := h.TaskUseCase.DeleteTask(c.Request().Context(), taskId); err != nil {
+		return reponse.Fail(c, err)
 	}
-	return c.NoContent(http.StatusNoContent)
+	return reponse.Success(c, nil)
 }

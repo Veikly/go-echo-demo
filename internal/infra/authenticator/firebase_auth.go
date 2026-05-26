@@ -2,7 +2,7 @@ package authenticator
 
 import (
 	"context"
-	"errors"
+	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
 
 	"firebase.google.com/go/v4/auth"
@@ -24,7 +24,7 @@ func (firebaseAuthenticator *FirebaseAuthenticator) Authenticate(ctx context.Con
 	token, err := firebaseAuthenticator.authClient.VerifyIDToken(ctx, tokenString)
 	if err != nil {
 		zap.L().Error("Firebase Token 验证失败", zap.Error(err))
-		return nil, err
+		return nil, constants.TokenInvalid
 	}
 
 	// auth.Token的Claims字段被打上了 json:"-" 无法打印出来 要获取实际的认证数据 需要从token.Claims获取
@@ -33,7 +33,7 @@ func (firebaseAuthenticator *FirebaseAuthenticator) Authenticate(ctx context.Con
 	// 2.检查邮件地址是否已验证 如果没有 中断这里的认证流程 提示先完成邮箱地址验证
 	emailVerified, ok := token.Claims["email_verified"].(bool)
 	if !ok || !emailVerified {
-		return nil, errors.New("please check your email address")
+		return nil, constants.EmailUnverified
 	}
 
 	var u domain.UserSession
@@ -53,5 +53,5 @@ func (firebaseAuthenticator *FirebaseAuthenticator) Authenticate(ctx context.Con
 	}
 
 	zap.L().Error("Token 有效但缺少关键字段", zap.String("extracted_uid", uid), zap.String("extracted_email", email))
-	return nil, errors.New("token claims check error: missing uid or email")
+	return nil, constants.TokenInvalid
 }

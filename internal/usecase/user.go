@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"errors"
+	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
@@ -19,7 +19,7 @@ func NewUser(s repository.User) *User {
 
 func (u *User) GetMyDetail(ctx context.Context, userId string) (usecaseio.UserDetailOutput, error) {
 	if userId == "" {
-		return usecaseio.UserDetailOutput{}, errors.New("userId can't be null")
+		return usecaseio.UserDetailOutput{}, constants.InvalidInputParam
 	}
 	res, err := u.userSvc.GetUserDetailById(ctx, userId)
 	if err != nil {
@@ -31,7 +31,7 @@ func (u *User) GetMyDetail(ctx context.Context, userId string) (usecaseio.UserDe
 
 func (u *User) CompleteUserInfo(ctx context.Context, input usecaseio.CompleteUserInfoDetail) (usecaseio.CompleteUserInfoDetail, error) {
 	if input == (usecaseio.CompleteUserInfoDetail{}) {
-		return usecaseio.CompleteUserInfoDetail{}, errors.New("userId can't be null")
+		return usecaseio.CompleteUserInfoDetail{}, constants.InvalidInputParam
 	}
 	res, err := u.userSvc.CompleteUserInfo(ctx, usecaseio.ToModelUser(&input))
 	if err != nil {
