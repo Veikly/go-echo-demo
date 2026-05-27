@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"go-echo-demo/internal/constants"
+
 	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/infra/firestore/dto"
 	"go-echo-demo/internal/model"
@@ -22,45 +22,56 @@ func NewUser(client *firestore.Client) *User {
 	}
 }
 
-func upsertUser(ctx context.Context) *model.User {
-	u, ok := ctx.Value(domain.UserSessionKey).(domain.UserSession)
-	var user model.User
-	if ok {
-		user.ID = u.UID
-		user.Email = u.Email
-	}
-	return &user
-}
-
 func (s *User) GetUserDetailById(ctx context.Context, userId string) (*model.User, error) {
 	docRef := s.client.Collection("users").Doc(userId)
 	docSnap, err := docRef.Get(ctx)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			newUser := upsertUser(ctx)
-			s.client.Collection("users").Doc(newUser.ID).Set(ctx, newUser.ToMap())
-			return newUser, constants.UserNotFound
+		if status.Code(err) != codes.NotFound {
+			return nil, err
 		}
+		// 用户首次访问：从 UserSession 同步创建
+		return s.syncUserFromSession(ctx, docRef)
+	}
+	var userDTO dto.User
+	if err := docSnap.DataTo(&userDTO); err != nil {
 		return nil, err
 	}
-	var user dto.User
-	if err := docSnap.DataTo(&user); err != nil {
+	userDTO.ID = docRef.ID
+
+	// 如果 Firebase Auth 中的 email 已变更，则同步更新
+	if session, ok := domain.FromUserSession(ctx); ok && session.Email != "" && session.Email != userDTO.Email {
+		_, _ = docRef.Set(ctx, map[string]any{"Email": session.Email}, firestore.MergeAll)
+		userDTO.Email = session.Email
+	}
+
+	return userDTO.ToEntity(), nil
+}
+
+func (s *User) syncUserFromSession(ctx context.Context, docRef *firestore.DocumentRef) (*model.User, error) {
+	session, ok := domain.FromUserSession(ctx)
+	if !ok {
+		// 不应发生：auth middleware 保证 UserSession 存在
+		return nil, status.Error(codes.Unauthenticated, "user session not found")
+	}
+	userDTO := dto.NewUserFromSession(session)
+	if _, err := docRef.Set(ctx, userDTO); err != nil {
 		return nil, err
 	}
-	return user.ToEntity(), nil
+	userDTO.ID = docRef.ID
+	return userDTO.ToEntity(), nil
 }
 
 func (s *User) CompleteUserInfo(ctx context.Context, userInfo *model.User) (*model.User, error) {
-	docRef, _, err := s.client.Collection("users").Add(ctx, dto.ToDTO(userInfo))
-	if err != nil {
+	docRef := s.client.Collection("users").Doc(userInfo.ID)
+	if _, err := docRef.Set(ctx, dto.ToMap(userInfo), firestore.MergeAll); err != nil {
 		return nil, err
 	}
-	data, err := docRef.Get(ctx)
+	docSnap, err := docRef.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var u dto.User
-	if err := data.DataTo(&u); err != nil {
+	if err := docSnap.DataTo(&u); err != nil {
 		return nil, err
 	}
 	u.ID = docRef.ID

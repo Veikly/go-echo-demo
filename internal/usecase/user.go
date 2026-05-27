@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"go-echo-demo/internal/constants"
+	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
@@ -33,10 +34,15 @@ func (u *User) CompleteUserInfo(ctx context.Context, input usecaseio.CompleteUse
 	if input == (usecaseio.CompleteUserInfoDetail{}) {
 		return usecaseio.CompleteUserInfoDetail{}, constants.InvalidInputParam
 	}
-	// 从UserSession获取信息进行比对
-	// 必须现在Firebase中完成注册的用户才能完善用户信息
+	session, ok := domain.FromUserSession(ctx)
+	if !ok {
+		return usecaseio.CompleteUserInfoDetail{}, constants.CredentialsAbsence
+	}
+	userModel := usecaseio.ToModelUser(&input)
+	userModel.ID = session.UID
+	userModel.Email = session.Email
 
-	res, err := u.userSvc.CompleteUserInfo(ctx, usecaseio.ToModelUser(&input))
+	res, err := u.userSvc.CompleteUserInfo(ctx, userModel)
 	if err != nil {
 		return usecaseio.CompleteUserInfoDetail{}, err
 	}

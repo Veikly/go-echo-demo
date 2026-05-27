@@ -15,7 +15,6 @@ type Profile struct {
 
 type CompleteUserInfoInput struct {
 	Username string  `json:"username"`
-	Email    string  `json:"email"`
 	Age      int     `json:"age"`
 	Address  Address `json:"address"`
 	Profile  Profile `json:"profile"`
@@ -24,7 +23,6 @@ type CompleteUserInfoInput struct {
 func (input *CompleteUserInfoInput) ToCompleteUserInfoInput() usecaseio.CompleteUserInfoDetail {
 	return usecaseio.CompleteUserInfoDetail{
 		Username: input.Username,
-		Email:    input.Email,
 		Age:      input.Age,
 		Address:  usecaseio.Address(input.Address),
 		Profile:  usecaseio.Profile(input.Profile),

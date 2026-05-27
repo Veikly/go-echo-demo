@@ -22,7 +22,6 @@ type User struct {
 
 func (u *User) ToMap() map[string]any {
 	return map[string]any{
-		"ID":       u.ID,
 		"Username": u.Username,
 		"Email":    u.Email,
 		"Age":      u.Age,

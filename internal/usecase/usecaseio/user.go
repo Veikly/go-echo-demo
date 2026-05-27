@@ -42,10 +42,10 @@ func NewUserDetailOutput(u *model.User) UserDetailOutput {
 	}
 }
 
+// ToModelUser 从用户输入构建 model.User，Email 和 ID 由 usecase 从 UserSession 注入
 func ToModelUser(info *CompleteUserInfoDetail) *model.User {
 	return &model.User{
 		Username: info.Username,
-		Email:    info.Email,
 		Age:      info.Age,
 		Address:  model.Address(info.Address),
 		Profile:  model.Profile(info.Profile),
