@@ -23,7 +23,8 @@ import (
 
 // 项目启动入口 负责初始化组件 然后汇总 装配
 func main() {
-	logger, err := zap.NewProduction()
+	bootstrap.LoadConfig()
+	logger, err := bootstrap.InitLogger()
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +33,6 @@ func main() {
 
 	ctx := context.Background()
 
-	bootstrap.LoadConfig()
 	bootstrap.InitFirebase(ctx)
 
 	firebaseAuthenticator := authenticator.NewFirebaseAuthenticator(bootstrap.AuthClient)
