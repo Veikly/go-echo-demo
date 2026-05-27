@@ -40,6 +40,9 @@ func (h *UserHandler) CompleteUserInfo(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
+	if err := c.Validate(req); err != nil {
+		return reponse.Fail(c, err)
+	}
 	output, err := h.UserUseCase.CompleteUserInfo(c.Request().Context(), req.ToCompleteUserInfoInput())
 	if err != nil {
 		return reponse.Fail(c, err)

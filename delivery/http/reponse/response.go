@@ -3,6 +3,7 @@ package reponse
 import (
 	"errors"
 	"go-echo-demo/internal/constants"
+	"go-echo-demo/internal/validator"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -30,9 +31,11 @@ func Fail(c echo.Context, err error) error {
 	bizCode := constants.InternalError
 	msg := constants.InternalError.Error() // "系统内部错误！"
 
-	// 关于AsType的用法 需要特别注意 如果自定义的错误是值接收者 理论上来讲AsType支持传入指针和值 但是具体怎么写 需要根据外部传入的类型
-	// 如果是指针接收者 那么这里必须传入指针 若违反使用规则 这里的类型判断无法生效
-	if c, ok := errors.AsType[constants.BizCode](err); ok {
+	if ve, ok := errors.AsType[*validator.ValidationError](err); ok {
+		httpStatus = ve.HTTPStatus()
+		bizCode = ve.BizCode
+		msg = ve.Message
+	} else if c, ok := errors.AsType[constants.BizCode](err); ok {
 		zap.L().Error("匹配到业务异常")
 		httpStatus = c.HTTPStatus()
 		bizCode = c

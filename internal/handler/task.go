@@ -25,6 +25,9 @@ func (h *TaskHandler) CreateTask(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
+	if err := c.Validate(req); err != nil {
+		return reponse.Fail(c, err)
+	}
 	input := usecaseio.CreateTaskInput{
 		Title:       req.Title,
 		Description: req.Description,
@@ -72,6 +75,9 @@ func (h *TaskHandler) ModifyTask(c echo.Context) error {
 	var req request.ModifyTaskRequest
 	if err := c.Bind(&req); err != nil {
 		return err
+	}
+	if err := c.Validate(req); err != nil {
+		return reponse.Fail(c, err)
 	}
 	input := usecaseio.ModifyTaskInput{
 		ID:          taskId,

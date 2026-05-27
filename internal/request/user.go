@@ -14,8 +14,8 @@ type Profile struct {
 }
 
 type CompleteUserInfoInput struct {
-	Username string  `json:"username"`
-	Age      int     `json:"age"`
+	Username string  `json:"username" validate:"required,min=1,max=50"`
+	Age      int     `json:"age"      validate:"min=0,max=200"`
 	Address  Address `json:"address"`
 	Profile  Profile `json:"profile"`
 }

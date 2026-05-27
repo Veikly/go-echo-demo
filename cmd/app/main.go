@@ -9,6 +9,7 @@ import (
 	"go-echo-demo/internal/infra/authenticator"
 	"go-echo-demo/internal/infra/firestore/service"
 	"go-echo-demo/internal/usecase"
+	customvalidator "go-echo-demo/internal/validator"
 	"net/http"
 	"os"
 	"os/signal"
@@ -46,6 +47,7 @@ func main() {
 	userHandler := handler.NewUser(userUseCase)
 
 	e := echo.New()
+	e.Validator = customvalidator.New()
 	e.Use(middleware.Recover())
 	e.Use(authMiddleware)
 	e.Use(appmiddleware.ZapLogger)
