@@ -18,6 +18,7 @@ type CreateTaskOutput struct {
 	Title       string
 	Description string
 	Status      enums.TaskStatus // 0待办 1进行中 2已完成 3已放弃 4已归档
+	CreatorID   string
 	CompletedAt time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -28,6 +29,7 @@ type TaskDetailOutput struct {
 	Title       string
 	Description string
 	Status      enums.TaskStatus // 0待办 1进行中 2已完成 3已放弃 4已归档
+	CreatorID   string
 	CompletedAt time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

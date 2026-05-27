@@ -4,6 +4,8 @@ import (
 	"context"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
+	"os"
+	"strconv"
 
 	"firebase.google.com/go/v4/auth"
 	"go.uber.org/zap"
@@ -12,6 +14,9 @@ import (
 type FirebaseAuthenticator struct {
 	authClient *auth.Client
 }
+
+// 控制是否需要校验邮箱的开关
+var requireEmailVerify = false
 
 func NewFirebaseAuthenticator(authClient *auth.Client) *FirebaseAuthenticator {
 	return &FirebaseAuthenticator{
@@ -32,7 +37,12 @@ func (firebaseAuthenticator *FirebaseAuthenticator) Authenticate(ctx context.Con
 
 	// 2.检查邮件地址是否已验证 如果没有 中断这里的认证流程 提示先完成邮箱地址验证
 	emailVerified, ok := token.Claims["email_verified"].(bool)
-	if !ok || !emailVerified {
+	require, err := strconv.ParseBool(os.Getenv(constants.RequireEmailVerifyKey))
+	if err != nil {
+		// 如果没有读取到配置 默认都需要验证邮箱
+		require = true
+	}
+	if (!ok || !emailVerified) && require {
 		return nil, constants.EmailUnverified
 	}
 
