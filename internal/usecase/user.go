@@ -33,6 +33,9 @@ func (u *User) CompleteUserInfo(ctx context.Context, input usecaseio.CompleteUse
 	if input == (usecaseio.CompleteUserInfoDetail{}) {
 		return usecaseio.CompleteUserInfoDetail{}, constants.InvalidInputParam
 	}
+	// 从UserSession获取信息进行比对
+	// 必须现在Firebase中完成注册的用户才能完善用户信息
+
 	res, err := u.userSvc.CompleteUserInfo(ctx, usecaseio.ToModelUser(&input))
 	if err != nil {
 		return usecaseio.CompleteUserInfoDetail{}, err

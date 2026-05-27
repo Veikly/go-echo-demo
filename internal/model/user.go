@@ -19,3 +19,14 @@ type User struct {
 	Address  Address
 	Profile  Profile
 }
+
+func (u *User) ToMap() map[string]any {
+	return map[string]any{
+		"ID":       u.ID,
+		"Username": u.Username,
+		"Email":    u.Email,
+		"Age":      u.Age,
+		"Address":  u.Address,
+		"Profile":  u.Profile,
+	}
+}

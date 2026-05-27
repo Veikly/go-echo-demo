@@ -31,28 +31,17 @@ func main() {
 
 	ctx := context.Background()
 
-	config, err := bootstrap.LoadConfig()
-	if err != nil {
-		zap.L().Error("loading the bootstrap config error", zap.Error(err))
-		return
-	}
-
-	// init firestore
-	fireStoreClient, err := bootstrap.InitFireStore(ctx, config.ProjectName)
-	if err != nil {
-		zap.L().Error("Exception occurred while initializing the database connection", zap.Error(err))
-		return
-	}
-	bootstrap.InitFirebase()
+	bootstrap.LoadConfig()
+	bootstrap.InitFirebase(ctx)
 
 	firebaseAuthenticator := authenticator.NewFirebaseAuthenticator(bootstrap.AuthClient)
 	authMiddleware := appmiddleware.NewAuthMiddleware(firebaseAuthenticator)
 
-	taskSvc := service.NewTask(fireStoreClient)
+	taskSvc := service.NewTask(bootstrap.FirestoreClient)
 	taskUseCase := usecase.NewTask(taskSvc)
 	taskHandler := handler.NewTask(taskUseCase)
 
-	userSvc := service.NewUser(fireStoreClient)
+	userSvc := service.NewUser(bootstrap.FirestoreClient)
 	userUseCase := usecase.NewUser(userSvc)
 	userHandler := handler.NewUser(userUseCase)
 
