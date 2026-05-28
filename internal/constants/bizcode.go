@@ -33,6 +33,7 @@ const (
 	CredentialsExpired BizCode = 3003
 	TokenInvalid       BizCode = 3004
 	PermissionDenied   BizCode = 3005
+	InvalidCursor      BizCode = 4001
 	InternalError      BizCode = 9001
 )
 
@@ -47,6 +48,7 @@ var mapBizCodeMsg = map[BizCode]string{
 	CredentialsExpired: "凭证过期",
 	TokenInvalid:       "无效Token",
 	PermissionDenied:   "无权访问该资源",
+	InvalidCursor:      "非法游标",
 }
 
 // 1. 实现 Go 的 error 接口
@@ -70,6 +72,7 @@ var mapBizCodeHTTPStatus = map[BizCode]int{
 	TokenInvalid:       http.StatusUnauthorized,
 	PermissionDenied:   http.StatusForbidden,
 	InternalError:      http.StatusInternalServerError,
+	InvalidCursor:      http.StatusBadRequest,
 }
 
 // HTTPStatus 返回业务码对应的 HTTP 状态码

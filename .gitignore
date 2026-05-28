@@ -8,3 +8,4 @@ secrets/
 .idea
 .env
 __debug_bin*
+composite_index_test.go
