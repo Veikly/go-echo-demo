@@ -26,6 +26,7 @@ const (
 	Success            BizCode = 0
 	InvalidInputParam  BizCode = 1001
 	RequireAbsence     BizCode = 1002
+	UnknownScene       BizCode = 1003
 	UserNotFound       BizCode = 2001
 	TaskNotFound       BizCode = 2002
 	EmailUnverified    BizCode = 3001
@@ -34,6 +35,7 @@ const (
 	TokenInvalid       BizCode = 3004
 	PermissionDenied   BizCode = 3005
 	InvalidCursor      BizCode = 4001
+	DocMapError        BizCode = 4002
 	InternalError      BizCode = 9001
 )
 
@@ -49,6 +51,8 @@ var mapBizCodeMsg = map[BizCode]string{
 	TokenInvalid:       "无效Token",
 	PermissionDenied:   "无权访问该资源",
 	InvalidCursor:      "非法游标",
+	UnknownScene:       "无法满足的查询请求",
+	DocMapError:        "执行转换时出错", // 可能要改一下这里
 }
 
 // 1. 实现 Go 的 error 接口
@@ -64,6 +68,8 @@ var mapBizCodeHTTPStatus = map[BizCode]int{
 	Success:            http.StatusOK,
 	InvalidInputParam:  http.StatusBadRequest,
 	RequireAbsence:     http.StatusBadRequest,
+	UnknownScene:       http.StatusBadRequest,
+	DocMapError:        http.StatusBadRequest,
 	UserNotFound:       http.StatusNotFound,
 	TaskNotFound:       http.StatusNotFound,
 	EmailUnverified:    http.StatusUnauthorized,

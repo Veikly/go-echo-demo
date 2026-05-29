@@ -8,7 +8,9 @@ import (
 
 // 定义服务结构体 描述echo实例包含的handler
 type Server struct {
-	Echo        *echo.Echo
-	TaskHandler *handler.TaskHandler
-	UserHandler *handler.UserHandler
+	Echo            *echo.Echo
+	TaskHandler     *handler.TaskHandler
+	UserHandler     *handler.UserHandler
+	TaskPageHandler handler.TaskPageHandlerFunc
 }
+
