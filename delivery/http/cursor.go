@@ -16,7 +16,7 @@ func EncodeCursor(c *domain.PageCursor, secret []byte) (string, error) {
 		return "", err
 	}
 	mac := hmac.New(sha256.New, secret)
-	mac.Write(secret)
+	mac.Write(payload)
 	sig := mac.Sum(nil) // 计算最终的签名
 
 	// 返回最终结果
@@ -44,7 +44,7 @@ func DecodeCursor(raw string, secret []byte) (*domain.PageCursor, error) {
 	}
 
 	mac := hmac.New(sha256.New, secret)
-	mac.Write(sig)
+	mac.Write(payload)
 	exceptedSig := mac.Sum(nil)
 
 	if !hmac.Equal(sig, exceptedSig) {

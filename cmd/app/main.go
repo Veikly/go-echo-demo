@@ -21,6 +21,7 @@ import (
 	"go.uber.org/zap"
 )
 
+
 // 项目启动入口 负责初始化组件 然后汇总 装配
 func main() {
 	bootstrap.LoadConfig()
