@@ -11,12 +11,7 @@ import (
 )
 
 // PaginatedHandler 通用分页 Handler 工厂。
-//
-// DTO 是各资源自定义的请求结构体（嵌入 BasePageQuery）。
-// Item 是响应列表中单条数据的类型。
-//
-// extractParams 负责从 DTO 中提取业务参数，由调用方实现，
-// 使各资源的参数绑定逻辑与通用框架解耦。
+// bindDTO 负责绑定请求参数并提取业务 SceneParams，由各资源自己实现。
 func PaginatedHandler[T, Item any](
 	uc *ucpagination.QueryUseCase[T, Item],
 	registry *dmpagination.Registry,
@@ -36,7 +31,6 @@ func PaginatedHandler[T, Item any](
 			Scene:  dmpagination.SceneID(base.Scene),
 			Params: params,
 			Cursor: base.Cursor,
-			Dir:    dmpagination.CursorDir(base.Direction),
 			Limit:  base.Limit,
 		})
 		if err != nil {
@@ -46,16 +40,10 @@ func PaginatedHandler[T, Item any](
 		return reponse.Success(c, httppagination.PageResponse[Item]{
 			Items:      result.Items,
 			NextCursor: result.NextCursor,
-			PrevCursor: result.PrevCursor,
 			HasMore:    result.HasMore,
 			TotalCount: result.TotalCount,
 		})
 	}
-}
-
-// NewHTTPError 便捷封装，供 bindDTO 实现中使用。
-func NewHTTPError(code int, msg string) error {
-	return echo.NewHTTPError(code, msg)
 }
 
 // BadRequest 便捷封装。

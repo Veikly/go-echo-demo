@@ -2,6 +2,7 @@ package scene
 
 import (
 	"fmt"
+	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/constants/enums"
 	dmpagination "go-echo-demo/internal/domain/pagination"
 	"time"
@@ -34,11 +35,11 @@ func buildTaskByStatusTitle(params dmpagination.SceneParams) (dmpagination.PageQ
 	// status 必填
 	statusVal, ok := params["status"]
 	if !ok {
-		return dmpagination.PageQuery{}, fmt.Errorf("status is required for scene task.by_status_title")
+		return dmpagination.PageQuery{}, constants.RequireAbsence
 	}
 	status, err := toTaskStatus(statusVal)
 	if err != nil {
-		return dmpagination.PageQuery{}, err
+		return dmpagination.PageQuery{}, constants.InvalidInputParam
 	}
 	b.Where("status", dmpagination.FilterOpEq, status)
 
@@ -70,11 +71,11 @@ func buildTaskByCreatedAt(params dmpagination.SceneParams) (dmpagination.PageQue
 	// status 必填
 	statusVal, ok := params["status"]
 	if !ok {
-		return dmpagination.PageQuery{}, fmt.Errorf("status is required for scene task.by_created_at")
+		return dmpagination.PageQuery{}, constants.RequireAbsence
 	}
 	status, err := toTaskStatus(statusVal)
 	if err != nil {
-		return dmpagination.PageQuery{}, err
+		return dmpagination.PageQuery{}, constants.InvalidInputParam
 	}
 	b.Where("status", dmpagination.FilterOpEq, status)
 
@@ -82,7 +83,7 @@ func buildTaskByCreatedAt(params dmpagination.SceneParams) (dmpagination.PageQue
 	if v, ok := params["created_after"]; ok && v != "" {
 		t, err := time.Parse(time.RFC3339, fmt.Sprintf("%v", v))
 		if err != nil {
-			return dmpagination.PageQuery{}, fmt.Errorf("invalid created_after: %w", err)
+			return dmpagination.PageQuery{}, constants.InvalidInputParam
 		}
 		b.Where("created_at", dmpagination.FilterOpGt, t)
 	}
@@ -91,7 +92,7 @@ func buildTaskByCreatedAt(params dmpagination.SceneParams) (dmpagination.PageQue
 	if v, ok := params["created_before"]; ok && v != "" {
 		t, err := time.Parse(time.RFC3339, fmt.Sprintf("%v", v))
 		if err != nil {
-			return dmpagination.PageQuery{}, fmt.Errorf("invalid created_before: %w", err)
+			return dmpagination.PageQuery{}, constants.InvalidInputParam
 		}
 		b.Where("created_at", dmpagination.FilterOpLt, t)
 	}
@@ -118,10 +119,10 @@ func toTaskStatus(val any) (enums.TaskStatus, error) {
 	case string:
 		var s int
 		if _, err := fmt.Sscanf(v, "%d", &s); err != nil {
-			return 0, fmt.Errorf("invalid status value: %q", v)
+			return 0, constants.InvalidInputParam
 		}
 		return enums.TaskStatus(s), nil
 	default:
-		return 0, fmt.Errorf("unsupported status type: %T", val)
+		return 0, constants.InvalidInputParam
 	}
 }

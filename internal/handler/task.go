@@ -12,12 +12,27 @@ import (
 
 type TaskHandler struct {
 	TaskUseCase usecase.TaskUseCase
+	listHandler echo.HandlerFunc // 可选，由 WithListHandler 挂载
 }
 
 func NewTask(taskUseCase usecase.TaskUseCase) *TaskHandler {
 	return &TaskHandler{
 		TaskUseCase: taskUseCase,
 	}
+}
+
+// WithListHandler 挂载分页查询能力，返回自身支持链式调用。
+func (h *TaskHandler) WithListHandler(lh echo.HandlerFunc) *TaskHandler {
+	h.listHandler = lh
+	return h
+}
+
+// ListTasks 分页查询入口，委托给注入的 listHandler。
+func (h *TaskHandler) ListTasks(c echo.Context) error {
+	if h.listHandler == nil {
+		return echo.NewHTTPError(404, "list not supported")
+	}
+	return h.listHandler(c)
 }
 
 func (h *TaskHandler) CreateTask(c echo.Context) error {

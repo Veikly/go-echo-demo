@@ -4,7 +4,6 @@ package pagination
 type PageResponse[DTO any] struct {
 	Items      []DTO  `json:"items"`
 	NextCursor string `json:"nextCursor"`
-	PrevCursor string `json:"prevCursor"`
 	HasMore    bool   `json:"hasMore"`
 	TotalCount *int64 `json:"totalCount,omitempty"`
 }

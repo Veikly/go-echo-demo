@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
-// 将Firestore Snapshot映射到 领域模型
+// Mapper 将 Firestore DocumentSnapshot 映射到领域模型
 type Mapper[T any] func(*firestore.DocumentSnapshot) (T, error)
 
 // FirestoreRepository[T] 通用 Firestore 分页仓储。
@@ -32,15 +32,11 @@ func NewFirestoreRepository[T any](
 }
 
 func (r FirestoreRepository[T]) Query(ctx context.Context, q pagination.PageQuery) (pagination.PageResult[T], error) {
-	// 参数规范化（防御性处理，Use Case 层应已处理，此处兜底）
 	if q.Limit <= 0 {
 		q.Limit = 20
 	}
 	if q.Limit > 100 {
 		q.Limit = 100
-	}
-	if q.Direction == "" {
-		q.Direction = pagination.CursorForward
 	}
 
 	fsQuery, err := r.buildQuery(q)
@@ -50,20 +46,11 @@ func (r FirestoreRepository[T]) Query(ctx context.Context, q pagination.PageQuer
 
 	docs, err := fsQuery.Limit(q.Limit + 1).Documents(ctx).GetAll()
 	if err != nil {
-		// todo 这里需要对错误转转换 不要返回原始gRPC错误码
 		return pagination.PageResult[T]{}, err
-	}
-
-	// 反向翻页结果集需翻转，保证返回顺序始终与正向一致
-	if q.Direction == pagination.CursorBackward {
-		for i, j := 0, len(docs)-1; i < j; i, j = i+1, j-1 {
-			docs[i], docs[j] = docs[j], docs[i]
-		}
 	}
 
 	hasMore := len(docs) > q.Limit
 	if hasMore {
-		// 如果有下一页 返回原始结果
 		docs = docs[:q.Limit]
 	}
 
@@ -75,40 +62,24 @@ func (r FirestoreRepository[T]) Query(ctx context.Context, q pagination.PageQuer
 		}
 		items = append(items, item)
 	}
-	// 构造返回结构
+
 	result := pagination.PageResult[T]{Items: items, HasMore: hasMore}
 
 	if len(docs) > 0 {
 		lastDoc := docs[len(docs)-1]
-		firstDoc := docs[0]
-
-		// 取排序字段的值用于 cursor（取第一个 SortBy 字段）
 		sortField := ""
 		if len(q.SortBy) > 0 {
 			sortField = q.SortBy[0].Field
 		}
-		getSortValue := func(doc *firestore.DocumentSnapshot) any {
-			if sortField == "" {
-				return nil
-			}
-			v, _ := doc.DataAt(sortField)
-			return v
+		var sortValue any
+		if sortField != "" {
+			sortValue, _ = lastDoc.DataAt(sortField)
 		}
-
-		// 正向：最后一条文档作为下一页游标
 		result.NextCursor, _ = pagination.EncodeCursor(pagination.CursorData{
 			DocID:     lastDoc.Ref.ID,
 			SortField: sortField,
-			SortValue: getSortValue(lastDoc),
+			SortValue: sortValue,
 		})
-		// 有入参游标说明不是第一页，生成上一页游标
-		if q.Cursor != nil && q.Direction != pagination.CursorRefresh {
-			result.PrevCursor, _ = pagination.EncodeCursor(pagination.CursorData{
-				DocID:     firstDoc.Ref.ID,
-				SortField: sortField,
-				SortValue: getSortValue(firstDoc),
-			})
-		}
 	}
 
 	if q.IncludeTotalCount {
@@ -116,7 +87,6 @@ func (r FirestoreRepository[T]) Query(ctx context.Context, q pagination.PageQuer
 		if err == nil {
 			result.TotalCount = &count
 		}
-		// 总数查询失败不影响主查询，记录日志即可（此处省略 logger 依赖）
 	}
 
 	return result, nil
@@ -136,52 +106,37 @@ func (r *FirestoreRepository[T]) buildQuery(q pagination.PageQuery) (firestore.Q
 	base := r.client.Collection(r.collection).Query
 
 	if len(q.Filters) > 0 {
-		entityFilter := buildEntityFilter(q.Filters)
-		base = base.WhereEntity(entityFilter)
+		base = base.WhereEntity(buildEntityFilter(q.Filters))
 	}
 
-	reverse := q.Direction == pagination.CursorBackward
-
 	for _, s := range q.SortBy {
-		desc := s.Descending
-		if reverse {
-			desc = !desc
-		}
 		dir := firestore.Asc
-		if desc {
+		if s.Descending {
 			dir = firestore.Desc
 		}
 		base = base.OrderBy(s.Field, dir)
 	}
-	// 追加 __name__ 保证游标唯一性（与 sort 字段相同方向）
+
+	// 追加 __name__ 保证游标唯一性，方向与第一个排序字段一致
 	idDir := firestore.Asc
-	if reverse && len(q.SortBy) > 0 && q.SortBy[0].Descending {
+	if len(q.SortBy) > 0 && q.SortBy[0].Descending {
 		idDir = firestore.Desc
 	}
 	base = base.OrderBy(firestore.DocumentID, idDir)
 
 	// 应用游标
-	if q.Cursor != nil && q.Direction != pagination.CursorRefresh {
+	if q.Cursor != nil {
 		cursorData := q.Cursor
 		if cursorData.SortValue != nil && cursorData.DocID != "" {
-			switch q.Direction {
-			case pagination.CursorForward:
-				base = base.StartAfter(cursorData.SortValue, cursorData.DocID)
-			case pagination.CursorBackward:
-				base = base.EndBefore(cursorData.SortValue, cursorData.DocID)
-			}
+			base = base.StartAfter(cursorData.SortValue, cursorData.DocID)
 		}
 	}
 
 	return base, nil
 }
 
-// ─────────────────────────────────────────────────────────────
 // buildEntityFilter — FilterCriteria 树 → firestore.EntityFilter
-// 支持任意深度的 AND / OR 嵌套
-// ─────────────────────────────────────────────────────────────
 func buildEntityFilter(filters []pagination.FilterCriteria) firestore.EntityFilter {
-	// 如果是单个的叶子节点 直接返回PropertyFilter
 	if len(filters) == 1 && len(filters[0].Children) == 0 {
 		return firestore.PropertyFilter{
 			Path:     filters[0].Field,
@@ -190,7 +145,6 @@ func buildEntityFilter(filters []pagination.FilterCriteria) firestore.EntityFilt
 		}
 	}
 
-	// 递归构造子节点
 	children := make([]firestore.EntityFilter, 0, len(filters))
 	for _, f := range filters {
 		if len(f.Children) > 0 {
@@ -210,19 +164,14 @@ func buildEntityFilter(filters []pagination.FilterCriteria) firestore.EntityFilt
 	return firestore.AndFilter{Filters: children}
 }
 
-// ─────────────────────────────────────────────────────────────
-// aggregateCount — AggregationQuery 总数（不下载文档）
-// ─────────────────────────────────────────────────────────────
+// aggregateCount — AggregationQuery 总数
 func (r *FirestoreRepository[T]) aggregateCount(ctx context.Context, q pagination.PageQuery) (int64, error) {
 	base := r.client.Collection(r.collection).Query
-
 	if len(q.Filters) > 0 {
 		base = base.WhereEntity(buildEntityFilter(q.Filters))
 	}
 
-	result, err := base.NewAggregationQuery().
-		WithCount("count").
-		Get(ctx)
+	result, err := base.NewAggregationQuery().WithCount("count").Get(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -231,11 +180,9 @@ func (r *FirestoreRepository[T]) aggregateCount(ctx context.Context, q paginatio
 	if !ok {
 		return 0, fmt.Errorf("aggregation result missing count")
 	}
-
 	n, ok := v.(int64)
 	if !ok {
 		return 0, fmt.Errorf("unexpected count value type: %T", v)
 	}
-
 	return n, nil
 }

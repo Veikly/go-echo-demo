@@ -2,21 +2,18 @@ package handler
 
 import (
 	httppagination "go-echo-demo/delivery/http/pagination"
+	"go-echo-demo/internal/constants"
 	dmpagination "go-echo-demo/internal/domain/pagination"
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
 	ucpagination "go-echo-demo/internal/usecase/pagination"
-	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
-// TaskPageHandlerFunc 是 task 分页查询的 Echo handler 类型别名。
-type TaskPageHandlerFunc = echo.HandlerFunc
-
-// NewTaskPageHandler 构造 task 分页查询 handler。
-func NewTaskPageHandler(
+// NewTaskListHandler 构造 task 分页查询 handler，供 provider 层调用后通过 WithListHandler 挂载。
+func NewTaskListHandler(
 	uc *ucpagination.QueryUseCase[model.Task, response.TaskItem],
 	registry *dmpagination.Registry,
 ) echo.HandlerFunc {
@@ -27,11 +24,11 @@ func NewTaskPageHandler(
 	)
 }
 
-// bindTaskPageQuery 绑定并解析 task 分页请求参数，返回通用基础参数和业务 SceneParams。
+// bindTaskPageQuery 绑定并解析 task 分页请求参数。
 func bindTaskPageQuery(c echo.Context) (httppagination.BasePageQuery, dmpagination.SceneParams, error) {
 	var dto request.TaskPageQuery
 	if err := c.Bind(&dto); err != nil {
-		return httppagination.BasePageQuery{}, nil, echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return httppagination.BasePageQuery{}, nil, constants.InvalidInputParam
 	}
 
 	params := dmpagination.SceneParams{}

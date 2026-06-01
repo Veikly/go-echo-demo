@@ -25,14 +25,6 @@ const (
 	LogicOr  LogicOp = "OR"
 )
 
-type CursorDir string
-
-const (
-	CursorForward  CursorDir = "forward"
-	CursorBackward CursorDir = "backward"
-	CursorRefresh  CursorDir = "refresh"
-)
-
 // 支持嵌套的过滤条件树
 // 叶节点：Field + Op + Value 非空，Children 为空。
 // 组合节点：Children 非空，Logic 指定 AND / OR，Field/Op/Value 忽略。
@@ -53,7 +45,6 @@ type SortField struct {
 type PageQuery struct {
 	Cursor            *CursorData // 解码后的游标，nil 表示首页
 	Limit             int
-	Direction         CursorDir
 	Filters           []FilterCriteria
 	SortBy            []SortField
 	IncludeTotalCount bool // 是否需要返回查询总数
@@ -62,7 +53,6 @@ type PageQuery struct {
 type PageResult[T any] struct {
 	Items      []T
 	NextCursor string
-	PrevCursor string
 	HasMore    bool
 	TotalCount *int64 // 仅 IncludeTotalCount=true 时非 nil
 }
@@ -73,7 +63,7 @@ type QueryBuilder struct {
 }
 
 func NewQueryBuilder() *QueryBuilder {
-	return &QueryBuilder{q: PageQuery{Limit: defaultLimit, Direction: CursorForward}}
+	return &QueryBuilder{q: PageQuery{Limit: defaultLimit}}
 }
 
 func (b *QueryBuilder) Where(field string, op FilterOp, value any) *QueryBuilder {
@@ -105,11 +95,8 @@ func (b *QueryBuilder) Build() PageQuery {
 
 // ApplyPaging 将游标/分页参数叠加到已有 PageQuery，同时完成 cursor 解码。
 // 解码失败时返回 error，由 Use Case 层向上传递。
-func ApplyPaging(base PageQuery, rawCursor string, dir CursorDir, limit int) (PageQuery, error) {
+func ApplyPaging(base PageQuery, rawCursor string, limit int) (PageQuery, error) {
 	q := base
-	if dir != "" {
-		q.Direction = dir
-	}
 	if limit > 0 {
 		q.Limit = limit
 	}
