@@ -7,7 +7,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	pb "cloud.google.com/go/firestore/apiv1/firestorepb"
-	"go.uber.org/zap"
 )
 
 // Mapper 将 Firestore DocumentSnapshot 映射到领域模型
@@ -186,6 +185,5 @@ func (r *FirestoreRepository[T]) aggregateCount(ctx context.Context, q paginatio
 	if !ok {
 		return 0, constants.InternalError
 	}
-	zap.L().Info("查询记录总数", zap.Any("值", pbVal.GetIntegerValue()))
 	return pbVal.GetIntegerValue(), nil
 }
