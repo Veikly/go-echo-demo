@@ -2,11 +2,12 @@ package pagination
 
 import (
 	"context"
-	"fmt"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain/pagination"
 
 	"cloud.google.com/go/firestore"
+	pb "cloud.google.com/go/firestore/apiv1/firestorepb"
+	"go.uber.org/zap"
 )
 
 // Mapper 将 Firestore DocumentSnapshot 映射到领域模型
@@ -110,7 +111,7 @@ func (r *FirestoreRepository[T]) buildQuery(q pagination.PageQuery) (firestore.Q
 	}
 
 	for _, s := range q.SortBy {
-		dir := firestore.Asc
+		dir := firestore.Asc // 默认情况下 是升序
 		if s.Descending {
 			dir = firestore.Desc
 		}
@@ -176,13 +177,15 @@ func (r *FirestoreRepository[T]) aggregateCount(ctx context.Context, q paginatio
 		return 0, err
 	}
 
-	v, ok := result["count"]
+	countValue, ok := result["count"]
 	if !ok {
-		return 0, fmt.Errorf("aggregation result missing count")
+		return 0, constants.InternalError
 	}
-	n, ok := v.(int64)
+
+	pbVal, ok := countValue.(*pb.Value)
 	if !ok {
-		return 0, fmt.Errorf("unexpected count value type: %T", v)
+		return 0, constants.InternalError
 	}
-	return n, nil
+	zap.L().Info("查询记录总数", zap.Any("值", pbVal.GetIntegerValue()))
+	return pbVal.GetIntegerValue(), nil
 }

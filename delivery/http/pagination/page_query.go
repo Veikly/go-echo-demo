@@ -7,9 +7,10 @@ import (
 
 // BasePageQuery 通用分页基础参数，各资源 DTO 嵌入此结构。
 type BasePageQuery struct {
-	Scene  string `query:"scene"`
-	Cursor string `query:"cursor"`
-	Limit  int    `query:"limit"`
+	Scene          string `query:"scene"`
+	Cursor         string `query:"cursor"`
+	Limit          int    `query:"limit"`
+	WithTotalCount bool   `query:"with_total_count"` // 是否返回总数，默认 false
 }
 
 // ValidateBaseParams 校验通用分页参数的合法性，错误统一返回业务状态码。

@@ -34,10 +34,11 @@ func NewQueryUseCase[T, DTO any](cfg QueryUseCaseConfig[T, DTO]) *QueryUseCase[T
 
 // ExecuteInput Use Case 的输入参数（由 Delivery 层传入）。
 type ExecuteInput struct {
-	Scene  pagination.SceneID
-	Params pagination.SceneParams
-	Cursor string
-	Limit  int
+	Scene          pagination.SceneID
+	Params         pagination.SceneParams
+	Cursor         string
+	Limit          int
+	WithTotalCount bool
 }
 
 // Execute Use Case 执行逻辑。
@@ -51,6 +52,7 @@ func (uc *QueryUseCase[T, DTO]) Execute(ctx context.Context, input ExecuteInput)
 	if err != nil {
 		return pagination.PageResult[DTO]{}, err
 	}
+	q.IncludeTotalCount = input.WithTotalCount
 
 	q, err = uc.injectRules(ctx, q)
 	if err != nil {

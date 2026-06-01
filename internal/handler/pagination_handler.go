@@ -5,7 +5,6 @@ import (
 	"go-echo-demo/delivery/http/reponse"
 	dmpagination "go-echo-demo/internal/domain/pagination"
 	ucpagination "go-echo-demo/internal/usecase/pagination"
-	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
@@ -28,10 +27,11 @@ func PaginatedHandler[T, Item any](
 		}
 
 		result, err := uc.Execute(c.Request().Context(), ucpagination.ExecuteInput{
-			Scene:  dmpagination.SceneID(base.Scene),
-			Params: params,
-			Cursor: base.Cursor,
-			Limit:  base.Limit,
+			Scene:          dmpagination.SceneID(base.Scene),
+			Params:         params,
+			Cursor:         base.Cursor,
+			Limit:          base.Limit,
+			WithTotalCount: base.WithTotalCount,
 		})
 		if err != nil {
 			return err
@@ -44,9 +44,4 @@ func PaginatedHandler[T, Item any](
 			TotalCount: result.TotalCount,
 		})
 	}
-}
-
-// BadRequest 便捷封装。
-func BadRequest(msg string) error {
-	return echo.NewHTTPError(http.StatusBadRequest, msg)
 }

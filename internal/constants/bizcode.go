@@ -69,7 +69,7 @@ var mapBizCodeHTTPStatus = map[BizCode]int{
 	InvalidInputParam:  http.StatusBadRequest,
 	RequireAbsence:     http.StatusBadRequest,
 	UnknownScene:       http.StatusBadRequest,
-	DocMapError:        http.StatusBadRequest,
+	DocMapError:        http.StatusInternalServerError,
 	UserNotFound:       http.StatusNotFound,
 	TaskNotFound:       http.StatusNotFound,
 	EmailUnverified:    http.StatusUnauthorized,
