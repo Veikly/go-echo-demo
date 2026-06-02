@@ -118,6 +118,20 @@ func (h *TaskHandler) ModifyTask(c echo.Context) error {
 	return reponse.Success(c, rsp)
 }
 
+func (h *TaskHandler) BatchArchieveTask(c echo.Context) error {
+	var req request.BatchArchieveTask
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := c.Validate(req); err != nil {
+		return reponse.Fail(c, err)
+	}
+	if err := h.TaskUseCase.BatchArchieveTask(c.Request().Context(), req.IDs); err != nil {
+		return reponse.Fail(c, err)
+	}
+	return reponse.Success(c, nil)
+}
+
 func (h *TaskHandler) DeleteTask(c echo.Context) error {
 	taskId := c.Param("id")
 	if err := h.TaskUseCase.DeleteTask(c.Request().Context(), taskId); err != nil {

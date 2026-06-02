@@ -22,8 +22,7 @@ import (
 func NewTaskHandler(client *firestore.Client) *handler.TaskHandler {
 	// 基础 CRUD
 	taskSvc := service.NewTask(client)
-	taskUseCase := usecase.NewTask(taskSvc)
-
+	taskUseCase := usecase.NewTask(taskSvc, client)
 	// 分页查询
 	registry := dmpagination.NewRegistry()
 	scene.RegisterTaskScenes(registry)

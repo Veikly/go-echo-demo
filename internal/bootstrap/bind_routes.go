@@ -10,7 +10,8 @@ func BindRoutes(server *Server) {
 	taskGroup.GET("/:id", server.TaskHandler.GetTaskDetail)
 	taskGroup.PUT("/:id", server.TaskHandler.ModifyTask)
 	taskGroup.DELETE("/:id", server.TaskHandler.DeleteTask)
-	taskGroup.GET("", server.TaskHandler.ListTasks) // 分页查询
+	taskGroup.GET("", server.TaskHandler.ListTasks)          // 分页查询
+	taskGroup.POST("/archive", server.TaskHandler.BatchArchieveTask) // 批量归档（事务）
 
 	userGroup := apiGroup.Group("/users")
 	userGroup.GET("/:id", server.UserHandler.GetMyDetail)

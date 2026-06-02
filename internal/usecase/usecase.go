@@ -12,6 +12,9 @@ type TaskUseCase interface {
 	GetTaskDetail(ctx context.Context, taskId string) (usecaseio.TaskDetailOutput, error)
 	ModifyTask(ctx context.Context, input usecaseio.ModifyTaskInput) (usecaseio.TaskDetailOutput, error)
 	DeleteTask(ctx context.Context, taskId string) error
+	// BatchArchieveTask 批量归档已完成的任务，并原子更新用户归档统计
+	// 事务由 usecase 内部控制，handler 层无需感知
+	BatchArchieveTask(ctx context.Context, ids []string) error
 }
 
 type UserUseCase interface {

@@ -8,16 +8,20 @@ import (
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
+
+	"cloud.google.com/go/firestore"
 )
 
 // Task 要求实现TaskUseCase接口
 type Task struct {
 	taskSvc repository.TaskRepository
+	txSvc   repository.TransactionService
 }
 
-func NewTask(s repository.TaskRepository) *Task {
+func NewTask(s repository.TaskRepository, tx repository.TransactionService) *Task {
 	return &Task{
 		taskSvc: s,
+		txSvc:   tx,
 	}
 }
 
@@ -127,4 +131,22 @@ func (u *Task) DeleteTask(ctx context.Context, taskId string) error {
 		return fmt.Errorf("delete task error %w", err)
 	}
 	return nil
+}
+
+func (u *Task) BatchArchieveTask(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return constants.InvalidInputParam
+	}
+	session, ok := domain.FromUserSession(ctx)
+	if !ok {
+		return constants.CredentialsAbsence
+	}
+	// usecase 层决定开启事务，把多个 repo 操作包在同一个 tx 里原子执行
+	return u.txSvc.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// 批量归档任务（在事务内读取 + 校验 + 写入）
+		if err := u.taskSvc.BatchArchieveTask(ctx, ids, session.UID, tx); err != nil {
+			return err
+		}
+		return nil
+	})
 }
