@@ -1,10 +1,15 @@
 package handler
 
 import (
+	httppagination "go-echo-demo/delivery/http/pagination"
 	"go-echo-demo/delivery/http/reponse"
+	"go-echo-demo/internal/constants"
+	dmpagination "go-echo-demo/internal/domain/pagination"
+	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
 	"go-echo-demo/internal/usecase"
+	ucpagination "go-echo-demo/internal/usecase/pagination"
 	"go-echo-demo/internal/usecase/usecaseio"
 
 	"github.com/labstack/echo/v4"
@@ -19,6 +24,17 @@ func NewTask(taskUseCase usecase.TaskUseCase) *TaskHandler {
 	return &TaskHandler{
 		TaskUseCase: taskUseCase,
 	}
+}
+
+func NewTaskListHandler(
+	uc *ucpagination.QueryUseCase[model.Task, response.TaskItem],
+	registry *dmpagination.Registry,
+) echo.HandlerFunc {
+	return PaginatedHandler[model.Task, response.TaskItem](
+		uc,
+		registry,
+		bindTaskPageQuery,
+	)
 }
 
 // WithListHandler 挂载分页查询能力，返回自身支持链式调用。
@@ -138,4 +154,36 @@ func (h *TaskHandler) DeleteTask(c echo.Context) error {
 		return reponse.Fail(c, err)
 	}
 	return reponse.Success(c, nil)
+}
+
+// bindTaskPageQuery 绑定并解析 task 分页请求参数。
+func bindTaskPageQuery(c echo.Context) (httppagination.BasePageQuery, dmpagination.SceneParams, error) {
+	var dto request.TaskPageQuery
+	if err := c.Bind(&dto); err != nil {
+		return httppagination.BasePageQuery{}, nil, constants.InvalidInputParam
+	}
+
+	params := dmpagination.SceneParams{}
+
+	if dto.Status != nil {
+		params["status"] = *dto.Status
+	}
+	if dto.Title != "" {
+		params["title"] = dto.Title
+	}
+	if dto.CreatedAfter != "" {
+		params["created_after"] = dto.CreatedAfter
+	}
+	if dto.CreatedBefore != "" {
+		params["created_before"] = dto.CreatedBefore
+	}
+	if dto.Desc != nil {
+		if *dto.Desc {
+			params["desc"] = "true"
+		} else {
+			params["desc"] = "false"
+		}
+	}
+
+	return dto.BasePageQuery, params, nil
 }
