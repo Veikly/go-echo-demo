@@ -1,14 +1,28 @@
 package repository
 
-import (
-	"context"
+import "context"
 
-	"cloud.google.com/go/firestore"
-)
+// 事务的抽象标识 用于在usecase层表示有事务 但不表明具体实现
+type TxContent interface{}
 
-// *firestore.Client 自动持有此接口 也就是说 持有firestore.Client即实现了此方法 可以无缝调用
-// 在初始化TransactionService时 传入全局的*firestore.Client即可
-type TransactionService interface {
-	// 仿照firestore.client.RunTransaction方法签名 写一个接口 让持有这个接口的service自动拥有
-	RunTransaction(ctx context.Context, f func(context.Context, *firestore.Transaction) error, opts ...firestore.TransactionOption) error
+// 业务函数签名 需要进行事务控制的业务逻辑 作为回调函数传入
+type TxFunc func(ctx context.Context) error
+
+// 抽象事务管理器 基础设施层提供具体实现
+type TransactionManager interface {
+	// 运行事务
+	RunInTransaction(ctx context.Context, tx TxFunc) error
+}
+
+type txKey struct{}
+
+// 将事务塞入上下文
+func ContextWithTx(ctx context.Context, tx TxContent) context.Context {
+	return context.WithValue(ctx, txKey{}, tx)
+}
+
+// 从上下文中获取事务信息 如果没有则代表无需事务控制
+func TxFromContext(ctx context.Context) (TxContent, bool) {
+	tx, ok := ctx.Value(txKey{}).(TxContent)
+	return tx, ok
 }

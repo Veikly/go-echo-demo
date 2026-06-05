@@ -42,6 +42,7 @@ func main() {
 	e.Use(appmiddleware.ZapLogger)
 	e.HTTPErrorHandler = appmiddleware.CustomHTTPErrorHandler
 
+	provider.InitTransactionManager()
 	server := bootstrap.Server{
 		Echo:        e,
 		TaskHandler: provider.NewTaskHandler(bootstrap.FirestoreClient),

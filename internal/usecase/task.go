@@ -8,20 +8,18 @@ import (
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
-
-	"cloud.google.com/go/firestore"
 )
 
 // Task 要求实现TaskUseCase接口
 type Task struct {
-	taskSvc repository.TaskRepository
-	txSvc   repository.TransactionService
+	taskSvc   repository.TaskRepository
+	txManager repository.TransactionManager
 }
 
-func NewTask(s repository.TaskRepository, tx repository.TransactionService) *Task {
+func NewTask(s repository.TaskRepository, manager repository.TransactionManager) *Task {
 	return &Task{
-		taskSvc: s,
-		txSvc:   tx,
+		taskSvc:   s,
+		txManager: manager,
 	}
 }
 
@@ -141,12 +139,15 @@ func (u *Task) BatchArchieveTask(ctx context.Context, ids []string) error {
 	if !ok {
 		return constants.CredentialsAbsence
 	}
-	// usecase 层决定开启事务，把多个 repo 操作包在同一个 tx 里原子执行
-	return u.txSvc.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+	err := u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
 		// 批量归档任务（在事务内读取 + 校验 + 写入）
-		if err := u.taskSvc.BatchArchieveTask(ctx, ids, session.UID, tx); err != nil {
+		if err := u.taskSvc.BatchArchieveTask(ctx, ids, session.UID); err != nil {
 			return err
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

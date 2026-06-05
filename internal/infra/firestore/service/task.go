@@ -6,7 +6,9 @@ import (
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/constants/enums"
 	"go-echo-demo/internal/infra/firestore/dto"
+	"go-echo-demo/internal/infra/firestore/transaction"
 	"go-echo-demo/internal/model"
+	"go-echo-demo/internal/usecase/repository"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -86,69 +88,77 @@ func (s *Task) DeleteTask(ctx context.Context, taskId string) error {
 	return nil
 }
 
-func (s *Task) BatchArchieveTask(ctx context.Context, ids []string, userID string, tx *firestore.Transaction) error {
-	now := time.Now()
-
-	// === Phase 1: 在事务内批量读取所有目标任务 ===
-	// Firestore 事务要求：所有 Get 必须在任何 Set/Update/Delete 之前执行
-	refs := make([]*firestore.DocumentRef, len(ids))
-	for i, id := range ids {
-		refs[i] = s.client.Collection("tasks").Doc(id)
-	}
-	snaps, err := tx.GetAll(refs)
-	if err != nil {
-		return fmt.Errorf("batch get tasks error: %w", err)
-	}
-
-	// 读取用户归档统计文档（用于计数器的 read-modify-write）
-	statsRef := s.client.Collection("user_stats").Doc(userID)
-	statsSnap, err := tx.Get(statsRef)
-	// NotFound 是合法状态（首次归档），其他错误才需要返回
-	if err != nil && status.Code(err) != codes.NotFound {
-		return fmt.Errorf("get user stats error: %w", err)
-	}
-
-	// === Phase 2: 业务校验（基于事务内读到的快照，不做额外 IO）===
-	for _, snap := range snaps {
-		if !snap.Exists() {
-			return constants.TaskNotFound
+func (s *Task) BatchArchieveTask(ctx context.Context, ids []string, userID string) error {
+	if tx, ok := repository.TxFromContext(ctx); ok {
+		ftx := tx.(*transaction.FirestoreTx)
+		now := time.Now()
+		// Phase 1: 在事务内批量读取所有目标任务
+		refs := make([]*firestore.DocumentRef, len(ids))
+		for i, id := range ids {
+			refs[i] = s.client.Collection("tasks").Doc(id)
 		}
-		var task dto.Task
-		if err := snap.DataTo(&task); err != nil {
-			return constants.DocMapError
+		snaps, err := ftx.Tx.GetAll(refs)
+		if err != nil {
+			return constants.InternalError
 		}
-		// 权限校验：只能归档自己的任务
-		if task.CreatorID != userID {
-			return constants.PermissionDenied
-		}
-		// 业务规则：只有「已完成」状态的任务才能归档
-		if task.Status != enums.StatusDone {
-			return constants.TaskNotArchivable
-		}
-	}
 
-	// === Phase 3: 在事务内执行所有写操作 ===
-	for _, snap := range snaps {
-		tx.Update(snap.Ref, []firestore.Update{
-			{Path: "status", Value: enums.StatusArchived},
-			{Path: "updated_at", Value: now},
-		})
-	}
-
-	// 计数器 read-modify-write：基于事务读到的值做递增，保证并发安全
-	currentCount := 0
-	if statsSnap.Exists() {
-		var stats dto.UserStats
-		if err := statsSnap.DataTo(&stats); err != nil {
-			return constants.DocMapError
+		// 读取用户归档统计文档（用于计数器的 read-modify-write）
+		statsRef := s.client.Collection("user_stats").Doc(userID)
+		statsSnap, err := ftx.Tx.Get(statsRef)
+		// NotFound 是合法状态（首次归档），其他错误才需要返回
+		if err != nil && status.Code(err) != codes.NotFound {
+			return constants.InternalError
 		}
-		currentCount = stats.ArchivedCount
-	}
-	tx.Set(statsRef, dto.UserStats{
-		UserID:        userID,
-		ArchivedCount: currentCount + len(ids),
-		UpdatedAt:     now,
-	})
 
+		//  Phase 2: 业务校验（基于事务内读到的快照，不做额外 IO
+		for _, snap := range snaps {
+			if !snap.Exists() {
+				return constants.TaskNotFound
+			}
+			var task dto.Task
+			if err := snap.DataTo(&task); err != nil {
+				return constants.DocMapError
+			}
+			// 权限校验：只能归档自己的任务
+			if task.CreatorID != userID {
+				return constants.PermissionDenied
+			}
+			// 业务规则：只有「已完成」状态的任务才能归档
+			if task.Status != enums.StatusDone {
+				return constants.TaskNotArchivable
+			}
+		}
+
+		//  Phase 3: 在事务内执行所有写操作
+		for _, snap := range snaps {
+			if err := ftx.Tx.Update(snap.Ref, []firestore.Update{
+				{Path: "status", Value: enums.StatusArchived},
+				{Path: "updated_at", Value: now},
+			}); err != nil {
+				return constants.InternalError
+			}
+		}
+
+		// 计数器 read-modify-write：基于事务读到的值做递增，保证并发安全
+		// statsSnap 在 NotFound 时 Exists()==false，直接用 currentCount=0 即可
+		currentCount := 0
+		if statsSnap.Exists() {
+			var stats dto.UserStats
+			if err := statsSnap.DataTo(&stats); err != nil {
+				return constants.DocMapError
+			}
+			currentCount = stats.ArchivedCount
+		}
+		if err := ftx.Tx.Set(statsRef, dto.UserStats{
+			UserID:        userID,
+			ArchivedCount: currentCount + len(ids),
+			UpdatedAt:     now,
+		}); err != nil {
+			return constants.InternalError
+		}
+	} else {
+		// 这个方法默认需要事务控制 如果没有收到事务信号 直接抛异常
+		return constants.RequireTransaction
+	}
 	return nil
 }

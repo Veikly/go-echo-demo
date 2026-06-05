@@ -37,6 +37,7 @@ const (
 	InvalidCursor      BizCode = 4001
 	DocMapError        BizCode = 4002
 	TaskNotArchivable  BizCode = 4003 // 任务状态不满足归档条件（必须为已完成）
+	RequireTransaction BizCode = 4004 // 需要事务 但是没从context中找到对应标志
 	InternalError      BizCode = 9001
 )
 
@@ -55,6 +56,7 @@ var mapBizCodeMsg = map[BizCode]string{
 	UnknownScene:       "无法满足的查询请求",
 	DocMapError:        "执行转换时出错", // 可能要改一下这里
 	TaskNotArchivable:  "只有已完成的任务才能被归档",
+	RequireTransaction: "需要事务控制",
 }
 
 // 1. 实现 Go 的 error 接口
@@ -82,6 +84,7 @@ var mapBizCodeHTTPStatus = map[BizCode]int{
 	InternalError:      http.StatusInternalServerError,
 	InvalidCursor:      http.StatusBadRequest,
 	TaskNotArchivable:  http.StatusUnprocessableEntity,
+	RequireTransaction: http.StatusInternalServerError,
 }
 
 // HTTPStatus 返回业务码对应的 HTTP 状态码
