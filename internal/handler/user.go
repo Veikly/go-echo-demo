@@ -2,18 +2,18 @@ package handler
 
 import (
 	"go-echo-demo/delivery/http/reponse"
+	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
-	"go-echo-demo/internal/usecase"
 
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-	UserUseCase usecase.UserUseCase
+	UserUseCase adapters.UserUseCase
 }
 
-func NewUser(userUseCase usecase.UserUseCase) *UserHandler {
+func NewUser(userUseCase adapters.UserUseCase) *UserHandler {
 	return &UserHandler{
 		UserUseCase: userUseCase,
 	}

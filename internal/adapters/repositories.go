@@ -1,4 +1,4 @@
-package repository
+package adapters
 
 import (
 	"context"
@@ -12,4 +12,9 @@ type TaskRepository interface {
 	DeleteTask(ctx context.Context, taskId string) error
 	// BatchArchieveTask 在事务 tx 内批量将属于 userID 的指定任务归档
 	BatchArchieveTask(ctx context.Context, ids []string, userID string) error
+}
+
+type User interface {
+	GetUserDetailById(ctx context.Context, userId string) (*model.User, error)
+	CompleteUserInfo(ctx context.Context, userInfo *model.User) (*model.User, error)
 }

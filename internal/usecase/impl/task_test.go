@@ -5,11 +5,11 @@ import (
 	"errors"
 	"testing"
 
+	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/model"
-	"go-echo-demo/internal/usecase"
-	"go-echo-demo/internal/usecase/repository"
+	usecase "go-echo-demo/internal/usecase/impl"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
 
@@ -45,7 +45,7 @@ func (r *fakeTaskRepo) BatchArchieveTask(ctx context.Context, ids []string, user
 	r.batchArchieveIDs = ids
 	r.batchArchieveUserID = userID
 	// 核心断言：ctx 里必须含有事务标志，否则说明 usecase 没有走事务路径
-	_, r.batchArchieveTxSeen = repository.TxFromContext(ctx)
+	_, r.batchArchieveTxSeen = adapters.TxFromContext(ctx)
 	return r.batchArchieveErr
 }
 
@@ -67,13 +67,13 @@ type fakeTxManager struct {
 	called bool
 }
 
-func (m *fakeTxManager) RunInTransaction(ctx context.Context, fn repository.TxFunc) error {
+func (m *fakeTxManager) RunInTransaction(ctx context.Context, fn adapters.TxFunc) error {
 	m.called = true
 	if m.txErr != nil {
 		return m.txErr
 	}
 	// 将 fakeTx 注入 ctx，模拟真实事务管理器的行为
-	txCtx := repository.ContextWithTx(ctx, &fakeTx{})
+	txCtx := adapters.ContextWithTx(ctx, &fakeTx{})
 	return fn(txCtx)
 }
 

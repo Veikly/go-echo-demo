@@ -1,14 +1,14 @@
-package service
+package firestoreservice
 
 import (
 	"context"
 	"fmt"
+	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/constants/enums"
 	"go-echo-demo/internal/infra/firestore/dto"
 	"go-echo-demo/internal/infra/firestore/transaction"
 	"go-echo-demo/internal/model"
-	"go-echo-demo/internal/usecase/repository"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -89,7 +89,7 @@ func (s *Task) DeleteTask(ctx context.Context, taskId string) error {
 }
 
 func (s *Task) BatchArchieveTask(ctx context.Context, ids []string, userID string) error {
-	if tx, ok := repository.TxFromContext(ctx); ok {
+	if tx, ok := adapters.TxFromContext(ctx); ok {
 		ftx := tx.(*transaction.FirestoreTx)
 		now := time.Now()
 		// Phase 1: 在事务内批量读取所有目标任务

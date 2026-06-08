@@ -2,17 +2,17 @@ package usecase
 
 import (
 	"context"
+	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
-	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
 
 type User struct {
-	userSvc repository.User
+	userSvc adapters.User
 }
 
-func NewUser(s repository.User) *User {
+func NewUser(s adapters.User) *User {
 	return &User{
 		userSvc: s,
 	}

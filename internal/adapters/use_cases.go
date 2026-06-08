@@ -1,7 +1,8 @@
-package usecase
+package adapters
 
 import (
 	"context"
+	domainpagination "go-echo-demo/internal/domain/pagination"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
 
@@ -20,4 +21,8 @@ type TaskUseCase interface {
 type UserUseCase interface {
 	GetMyDetail(ctx context.Context, userId string) (usecaseio.UserDetailOutput, error)
 	CompleteUserInfo(ctx context.Context, input usecaseio.CompleteUserInfoDetail) (usecaseio.CompleteUserInfoDetail, error)
+}
+
+type PageUseCase[DTO any] interface {
+	Execute(ctx context.Context, input usecaseio.ExecuteInput) (domainpagination.PageResult[DTO], error)
 }

@@ -3,12 +3,12 @@ package handler
 import (
 	httppagination "go-echo-demo/delivery/http/pagination"
 	"go-echo-demo/delivery/http/reponse"
+	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/constants"
 	dmpagination "go-echo-demo/internal/domain/pagination"
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
-	"go-echo-demo/internal/usecase"
 	ucpagination "go-echo-demo/internal/usecase/pagination"
 	"go-echo-demo/internal/usecase/usecaseio"
 
@@ -16,11 +16,11 @@ import (
 )
 
 type TaskHandler struct {
-	TaskUseCase usecase.TaskUseCase
+	TaskUseCase adapters.TaskUseCase
 	listHandler echo.HandlerFunc // 可选，由 WithListHandler 挂载
 }
 
-func NewTask(taskUseCase usecase.TaskUseCase) *TaskHandler {
+func NewTask(taskUseCase adapters.TaskUseCase) *TaskHandler {
 	return &TaskHandler{
 		TaskUseCase: taskUseCase,
 	}

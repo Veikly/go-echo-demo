@@ -3,20 +3,20 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/model"
-	"go-echo-demo/internal/usecase/repository"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
 
 // Task 要求实现TaskUseCase接口
 type Task struct {
-	taskSvc   repository.TaskRepository
-	txManager repository.TransactionManager
+	taskSvc   adapters.TaskRepository
+	txManager adapters.TransactionManager
 }
 
-func NewTask(s repository.TaskRepository, manager repository.TransactionManager) *Task {
+func NewTask(s adapters.TaskRepository, manager adapters.TransactionManager) *Task {
 	return &Task{
 		taskSvc:   s,
 		txManager: manager,

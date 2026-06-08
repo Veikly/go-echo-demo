@@ -9,10 +9,11 @@ import (
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/constants/enums"
 	dmpagination "go-echo-demo/internal/domain/pagination"
-	"go-echo-demo/internal/infra/firestore/scene"
+	"go-echo-demo/internal/infra/firestore/page/scene"
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/response"
 	ucpagination "go-echo-demo/internal/usecase/pagination"
+	"go-echo-demo/internal/usecase/usecaseio"
 )
 
 // ---------------------------------------------------------------------------
@@ -87,7 +88,7 @@ func TestExecute_FirstPage(t *testing.T) {
 
 	uc := newUC(repo, nil)
 
-	result, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	result, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 		Limit:  10,
@@ -139,7 +140,7 @@ func TestExecute_WithCursor(t *testing.T) {
 	}
 	uc := newUC(repo, nil)
 
-	_, err = uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err = uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 		Cursor: cursorStr,
@@ -172,7 +173,7 @@ func TestExecute_InvalidCursor(t *testing.T) {
 	repo := &fakeTaskRepo{}
 	uc := newUC(repo, nil)
 
-	_, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 		Cursor: "this-is-not-a-valid-cursor!!",
@@ -191,7 +192,7 @@ func TestExecute_UnknownScene(t *testing.T) {
 	repo := &fakeTaskRepo{}
 	uc := newUC(repo, nil)
 
-	_, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  dmpagination.SceneID("not.exist"),
 		Params: dmpagination.SceneParams{},
 	})
@@ -210,7 +211,7 @@ func TestExecute_MissingRequiredParam(t *testing.T) {
 	repo := &fakeTaskRepo{}
 	uc := newUC(repo, nil)
 
-	_, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{}, // 故意不传 status
 	})
@@ -229,7 +230,7 @@ func TestExecute_RepoError(t *testing.T) {
 	repo := &fakeTaskRepo{err: repoErr}
 	uc := newUC(repo, nil)
 
-	_, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 	})
@@ -259,7 +260,7 @@ func TestExecute_InjectRules(t *testing.T) {
 
 	uc := newUC(repo, injectRules)
 
-	_, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 	})
@@ -291,7 +292,7 @@ func TestExecute_InjectRulesError(t *testing.T) {
 
 	uc := newUC(repo, injectRules)
 
-	_, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	_, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 	})
@@ -315,7 +316,7 @@ func TestExecute_WithTotalCount(t *testing.T) {
 	}
 	uc := newUC(repo, nil)
 
-	result, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	result, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:          scene.TaskByStatusTitle,
 		Params:         dmpagination.SceneParams{"status": enums.StatusTodo},
 		WithTotalCount: true,
@@ -345,7 +346,7 @@ func TestExecute_EmptyResult(t *testing.T) {
 	}
 	uc := newUC(repo, nil)
 
-	result, err := uc.Execute(context.Background(), ucpagination.ExecuteInput{
+	result, err := uc.Execute(context.Background(), usecaseio.ExecuteInput{
 		Scene:  scene.TaskByStatusTitle,
 		Params: dmpagination.SceneParams{"status": enums.StatusTodo},
 	})

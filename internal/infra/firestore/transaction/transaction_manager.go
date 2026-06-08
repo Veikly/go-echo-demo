@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"context"
-	"go-echo-demo/internal/usecase/repository"
+	"go-echo-demo/internal/adapters"
 
 	"cloud.google.com/go/firestore"
 )
@@ -24,10 +24,10 @@ func NewTransactionManager(client *firestore.Client) *TransactionManager {
 }
 
 // 管理器实现抽象事务管理器
-func (m *TransactionManager) RunInTransaction(ctx context.Context, fn repository.TxFunc) error {
+func (m *TransactionManager) RunInTransaction(ctx context.Context, fn adapters.TxFunc) error {
 	return m.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		// 将事务开关包装进上下文
-		txCtx := repository.ContextWithTx(ctx, &FirestoreTx{Tx: tx})
+		txCtx := adapters.ContextWithTx(ctx, &FirestoreTx{Tx: tx})
 		return fn(txCtx)
 	})
 }

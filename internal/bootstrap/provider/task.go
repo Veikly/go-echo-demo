@@ -4,16 +4,15 @@ import (
 	"context"
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
-	dmpagination "go-echo-demo/internal/domain/pagination"
+	domainpagination "go-echo-demo/internal/domain/pagination"
 	"go-echo-demo/internal/handler"
 	"go-echo-demo/internal/infra/firestore/mapper"
-	fspagination "go-echo-demo/internal/infra/firestore/pagination"
-	"go-echo-demo/internal/infra/firestore/scene"
-	"go-echo-demo/internal/infra/firestore/service"
+	"go-echo-demo/internal/infra/firestore/page/scene"
+	firestoreservice "go-echo-demo/internal/infra/firestore/service"
 	"go-echo-demo/internal/model"
 	"go-echo-demo/internal/response"
-	"go-echo-demo/internal/usecase"
-	ucpagination "go-echo-demo/internal/usecase/pagination"
+	usecase "go-echo-demo/internal/usecase/impl"
+	usecasepagination "go-echo-demo/internal/usecase/pagination"
 
 	"cloud.google.com/go/firestore"
 )
@@ -21,15 +20,15 @@ import (
 // NewTaskHandler 装配 task 相关的所有组件，返回完整的 TaskHandler。
 func NewTaskHandler(client *firestore.Client) *handler.TaskHandler {
 	// 基础 CRUD
-	taskSvc := service.NewTask(client)
+	taskSvc := firestoreservice.NewTask(client)
 	taskUseCase := usecase.NewTask(taskSvc, GlobalTransationManger)
 	// 分页查询
-	registry := dmpagination.NewRegistry()
+	registry := domainpagination.NewRegistry()
 	scene.RegisterTaskScenes(registry)
 
-	repo := fspagination.NewFirestoreRepository[model.Task](client, "tasks", mapper.TaskMapper)
+	repo := firestoreservice.NewFirestoreRepository[model.Task](client, "tasks", mapper.TaskMapper)
 
-	uc := ucpagination.NewQueryUseCase(ucpagination.QueryUseCaseConfig[model.Task, response.TaskItem]{
+	uc := usecasepagination.NewQueryUseCase(usecasepagination.QueryUseCaseConfig[model.Task, response.TaskItem]{
 		Repo:     repo,
 		Registry: registry,
 		ToDTO: func(t model.Task) response.TaskItem {
@@ -45,14 +44,14 @@ func NewTaskHandler(client *firestore.Client) *handler.TaskHandler {
 			}
 		},
 		// 注入规则 只允许访问自己创建的任务 不允许访问其他人的
-		InjectRules: func(ctx context.Context, q dmpagination.PageQuery) (dmpagination.PageQuery, error) {
+		InjectRules: func(ctx context.Context, q domainpagination.PageQuery) (domainpagination.PageQuery, error) {
 			session, ok := domain.FromUserSession(ctx)
 			if !ok {
 				return q, constants.CredentialsAbsence
 			}
-			q.Filters = append(q.Filters, dmpagination.FilterCriteria{
+			q.Filters = append(q.Filters, domainpagination.FilterCriteria{
 				Field: "creator_id",
-				Op:    dmpagination.FilterOpEq,
+				Op:    domainpagination.FilterOpEq,
 				Value: session.UID,
 			})
 			return q, nil

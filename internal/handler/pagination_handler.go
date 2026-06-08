@@ -5,6 +5,7 @@ import (
 	"go-echo-demo/delivery/http/reponse"
 	dmpagination "go-echo-demo/internal/domain/pagination"
 	ucpagination "go-echo-demo/internal/usecase/pagination"
+	"go-echo-demo/internal/usecase/usecaseio"
 
 	"github.com/labstack/echo/v4"
 )
@@ -26,7 +27,7 @@ func PaginatedHandler[T, Item any](
 			return err
 		}
 
-		result, err := uc.Execute(c.Request().Context(), ucpagination.ExecuteInput{
+		result, err := uc.Execute(c.Request().Context(), usecaseio.ExecuteInput{
 			Scene:          dmpagination.SceneID(base.Scene),
 			Params:         params,
 			Cursor:         base.Cursor,
