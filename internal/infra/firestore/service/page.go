@@ -31,7 +31,7 @@ func NewFirestoreRepository[T any](
 	}
 }
 
-func (r FirestoreRepository[T]) Query(ctx context.Context, q pagination.PageQuery) (pagination.PageResult[T], error) {
+func (r *FirestoreRepository[T]) Query(ctx context.Context, q pagination.PageQuery) (pagination.PageResult[T], error) {
 	if q.Limit <= 0 {
 		q.Limit = 20
 	}
@@ -135,30 +135,45 @@ func (r *FirestoreRepository[T]) buildQuery(q pagination.PageQuery) (firestore.Q
 	return base, nil
 }
 
-// buildEntityFilter — FilterCriteria 树 → firestore.EntityFilter
+// buildEntityFilter 将 []FilterCriteria 列表转换为 firestore.EntityFilter。
+//
+// 约定：平级列表中的多个条目之间永远是 AND 关系。
+// 若需要 OR，必须通过 QueryBuilder.WhereOr() 显式构造一个
+// Logic=OR 的组合节点放入列表，由 buildSingleFilter 递归处理。
+//
+// 这样无论列表中混入多少组合节点，AND/OR 语义都由节点自身决定，
+// 不再依赖 filters[0].Logic 的值，消除了原有的歧义。
 func buildEntityFilter(filters []pagination.FilterCriteria) firestore.EntityFilter {
-	if len(filters) == 1 && len(filters[0].Children) == 0 {
+	if len(filters) == 1 {
+		return buildSingleFilter(filters[0])
+	}
+	// 平级多条目 → AND
+	children := make([]firestore.EntityFilter, len(filters))
+	for i, f := range filters {
+		children[i] = buildSingleFilter(f)
+	}
+	return firestore.AndFilter{Filters: children}
+}
+
+// buildSingleFilter 将单个 FilterCriteria 节点转换为 firestore.EntityFilter。
+//
+// 叶节点（Children 为空）：直接映射为 PropertyFilter。
+// 组合节点（Children 非空）：递归处理子节点，Logic 字段决定使用 AndFilter 还是 OrFilter。
+func buildSingleFilter(f pagination.FilterCriteria) firestore.EntityFilter {
+	if len(f.Children) == 0 {
+		// 叶节点
 		return firestore.PropertyFilter{
-			Path:     filters[0].Field,
-			Operator: string(filters[0].Op),
-			Value:    filters[0].Value,
+			Path:     f.Field,
+			Operator: string(f.Op),
+			Value:    f.Value,
 		}
 	}
-
-	children := make([]firestore.EntityFilter, 0, len(filters))
-	for _, f := range filters {
-		if len(f.Children) > 0 {
-			children = append(children, buildEntityFilter(f.Children))
-		} else {
-			children = append(children, firestore.PropertyFilter{
-				Path:     f.Field,
-				Operator: string(f.Op),
-				Value:    f.Value,
-			})
-		}
+	// 组合节点：递归
+	children := make([]firestore.EntityFilter, len(f.Children))
+	for i, child := range f.Children {
+		children[i] = buildSingleFilter(child)
 	}
-
-	if filters[0].Logic == pagination.LogicOr {
+	if f.Logic == pagination.LogicOr {
 		return firestore.OrFilter{Filters: children}
 	}
 	return firestore.AndFilter{Filters: children}
