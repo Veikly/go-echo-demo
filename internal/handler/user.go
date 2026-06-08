@@ -2,7 +2,6 @@ package handler
 
 import (
 	"go-echo-demo/delivery/http/reponse"
-	"go-echo-demo/internal/adapters"
 	"go-echo-demo/internal/request"
 	"go-echo-demo/internal/response"
 
@@ -10,10 +9,10 @@ import (
 )
 
 type UserHandler struct {
-	UserUseCase adapters.UserUseCase
+	UserUseCase UserUseCase
 }
 
-func NewUser(userUseCase adapters.UserUseCase) *UserHandler {
+func NewUser(userUseCase UserUseCase) *UserHandler {
 	return &UserHandler{
 		UserUseCase: userUseCase,
 	}

@@ -7,16 +7,17 @@ import (
 	"go-echo-demo/internal/constants"
 	"go-echo-demo/internal/domain"
 	"go-echo-demo/internal/model"
+	"go-echo-demo/internal/usecase"
 	"go-echo-demo/internal/usecase/usecaseio"
 )
 
 // Task 要求实现TaskUseCase接口
 type Task struct {
-	taskSvc   adapters.TaskRepository
+	taskSvc   usecase.TaskRepository
 	txManager adapters.TransactionManager
 }
 
-func NewTask(s adapters.TaskRepository, manager adapters.TransactionManager) *Task {
+func NewTask(s usecase.TaskRepository, manager adapters.TransactionManager) *Task {
 	return &Task{
 		taskSvc:   s,
 		txManager: manager,

@@ -1,4 +1,4 @@
-package adapters
+package usecase
 
 import (
 	"context"
