@@ -19,8 +19,7 @@ func NewUser(userUseCase UserUseCase) *UserHandler {
 }
 
 func (h *UserHandler) GetMyDetail(c echo.Context) error {
-	userId := c.Param("id")
-	output, err := h.UserUseCase.GetMyDetail(c.Request().Context(), userId)
+	output, err := h.UserUseCase.GetMyDetail(c.Request().Context())
 	if err != nil {
 		return reponse.Fail(c, err)
 	}

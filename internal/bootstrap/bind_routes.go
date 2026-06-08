@@ -14,7 +14,7 @@ func BindRoutes(server *Server) {
 	taskGroup.POST("/archive", server.TaskHandler.BatchArchieveTask) // 批量归档（事务）
 
 	userGroup := apiGroup.Group("/users")
-	userGroup.GET("/:id", server.UserHandler.GetMyDetail)
+	userGroup.GET("/me", server.UserHandler.GetMyDetail) // 查询当前登录用户，ID 从 token 中取
 	userGroup.POST("", server.UserHandler.CompleteUserInfo)
 
 }

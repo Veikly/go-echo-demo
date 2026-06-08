@@ -60,9 +60,7 @@ func ToMap(u *model.User) map[string]any {
 
 	data := map[string]any{}
 
-	if u.ID != "" {
-		data["id"] = u.ID
-	}
+	// 注意：不写入 "id"，Firestore 文档 ID 体现在 docRef 路径中，不属于文档内容。
 
 	if u.Username != "" {
 		data["username"] = u.Username

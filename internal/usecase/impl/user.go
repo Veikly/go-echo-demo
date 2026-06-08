@@ -18,15 +18,15 @@ func NewUser(s usecase.User) *User {
 	}
 }
 
-func (u *User) GetMyDetail(ctx context.Context, userId string) (usecaseio.UserDetailOutput, error) {
-	if userId == "" {
-		return usecaseio.UserDetailOutput{}, constants.InvalidInputParam
+func (u *User) GetMyDetail(ctx context.Context) (usecaseio.UserDetailOutput, error) {
+	session, ok := domain.FromUserSession(ctx)
+	if !ok {
+		return usecaseio.UserDetailOutput{}, constants.CredentialsAbsence
 	}
-	res, err := u.userSvc.GetUserDetailById(ctx, userId)
+	res, err := u.userSvc.GetUserDetailById(ctx, session.UID)
 	if err != nil {
 		return usecaseio.UserDetailOutput{}, err
 	}
-	//entity转UserDetailOutput
 	return usecaseio.NewUserDetailOutput(res), nil
 }
 

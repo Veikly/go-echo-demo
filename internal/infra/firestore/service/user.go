@@ -40,7 +40,7 @@ func (s *User) GetUserDetailById(ctx context.Context, userId string) (*model.Use
 
 	// 如果 Firebase Auth 中的 email 已变更，则同步更新
 	if session, ok := domain.FromUserSession(ctx); ok && session.Email != "" && session.Email != userDTO.Email {
-		_, _ = docRef.Set(ctx, map[string]any{"Email": session.Email}, firestore.MergeAll)
+		_, _ = docRef.Set(ctx, map[string]any{"email": session.Email}, firestore.MergeAll)
 		userDTO.Email = session.Email
 	}
 

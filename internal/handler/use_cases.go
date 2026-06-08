@@ -19,7 +19,8 @@ type TaskUseCase interface {
 }
 
 type UserUseCase interface {
-	GetMyDetail(ctx context.Context, userId string) (usecaseio.UserDetailOutput, error)
+	// GetMyDetail 从 ctx 中的 UserSession 获取当前登录用户的信息，不接受外部传入的 userId。
+	GetMyDetail(ctx context.Context) (usecaseio.UserDetailOutput, error)
 	CompleteUserInfo(ctx context.Context, input usecaseio.CompleteUserInfoDetail) (usecaseio.CompleteUserInfoDetail, error)
 }
 
